@@ -1,0 +1,29 @@
+/* controls */
+
+.fw-option-type-quiz-builder .fw-quiz-builder-item-type-gap-fill .fw-quiz-item-controls .fw-quiz-item-control-buttons {
+	display: none;
+}
+
+.fw-option-type-quiz-builder .fw-quiz-builder-item-type-gap-fill:hover .fw-quiz-item-controls .fw-quiz-item-control-buttons {
+	display: inline-block;
+}
+
+.fw-option-type-quiz-builder .fw-quiz-builder-item-type-gap-fill .fw-quiz-item-controls .fw-quiz-item-control-buttons > a,
+.fw-option-type-quiz-builder .fw-quiz-builder-item-type-gap-fill .fw-quiz-item-controls .fw-quiz-item-control-buttons > a:hover {
+	text-decoration: none;
+}
+
+/* end: controls */
+
+/* preview */
+
+.fw-option-type-quiz-builder .fw-quiz-item-label {
+	padding: 5px 0;
+}
+
+.fw-option-type-quiz-builder .fw-quiz-item-label .fw-quiz-item-title-label label {
+	font-weight: bold;
+}
+
+/* end: preview */
+

@@ -1,0 +1,27 @@
+.lesson-item {
+	margin-bottom: 10px;
+}
+
+.lesson-thumbnail {
+	float: left;
+	width: 64px;
+	height: 64px;
+}
+
+.lesson-thumbnail img{
+	margin: 0;
+}
+
+.lesson-desc {
+	float: left;
+	margin-left: 10px;
+	display: inline-block;
+}
+
+.lesson-desc h4 {
+	margin: 0 0 5px 0;
+}
+
+.lesson-desc p {
+	margin: 0;
+}

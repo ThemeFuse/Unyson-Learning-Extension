@@ -1,0 +1,13 @@
+.quiz-builder-form .quiz-item {
+	margin-bottom: 10px;
+}
+
+.quiz-builder-form .quiz-item.filed-gap .fill-gap {
+	border: none;
+	outline: none;
+	border-bottom: 1px solid;
+	width: auto;
+	border-radius: 0;
+	box-shadow: none;
+	background: transparent;
+}
