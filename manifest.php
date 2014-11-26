@@ -9,3 +9,5 @@ $manifest['description'] = __( 'This extension adds a Learning module to your th
 $manifest['version']     = '1.0.0';
 $manifest['display']     = true;
 $manifest['standalone']  = true;
+
+$manifest['github_update'] = 'ThemeFuse/Unyson-Learning-Extension';
