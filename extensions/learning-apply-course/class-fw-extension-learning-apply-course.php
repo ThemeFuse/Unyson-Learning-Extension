@@ -66,7 +66,7 @@ class FW_Extension_Learning_Apply_Course extends FW_Extension {
 	}
 
 	/**
-	 * @param FW_Learning_Student_Take_Course $method
+	 * @param FW_Learning_Take_Course $method
 	 */
 	public function set_take_course_method( FW_Learning_Take_Course $method ) {
 
