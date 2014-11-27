@@ -207,18 +207,6 @@ class FW_Learning_Student {
 	 * @return array|null
 	 */
 	public function get_user_data() {
-		{
-			//$this->add_user_data(array());
-			//delete_user_meta( $this->user_data->ID, $this->learning_student->get_name() . '-course-id' );
-			//TODO: Remove this
-			global $asfdasdfuser;
-
-			if ( $asfdasdfuser != true ) {
-				fw_print( fw_get_db_extension_user_data( $this->user_data->ID, $this->learning_student->get_name() ) );
-				$asfdasdfuser = true;
-			}
-		}
-
 		return fw_get_db_extension_user_data( $this->user_data->ID, $this->learning_student->get_name() );
 	}
 
