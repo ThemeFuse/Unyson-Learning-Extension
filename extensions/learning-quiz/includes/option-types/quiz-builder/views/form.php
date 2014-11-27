@@ -10,5 +10,5 @@
 	<div style="clear: both"></div>
 </div>
 <div class="submit">
-	<input type="submit" value="<?php _e( 'Submit', 'unyson' ) ?>"/>
+	<input type="submit" value="<?php _e( 'Submit', 'fw' ) ?>"/>
 </div>

@@ -17,10 +17,10 @@ $options = $item['options'];
 	<div class="inputs">
 		<input type="radio" value="true" id="<?php echo esc_attr( $attr['id'] ) ?>-true"
 		       name="<?php echo esc_attr( $attr['name'] ) ?>"/>
-		<label for="<?php echo esc_attr( $attr['id'] ) ?>-true"><?php _e( 'True', 'unyson' ) ?></label>
+		<label for="<?php echo esc_attr( $attr['id'] ) ?>-true"><?php _e( 'True', 'fw' ) ?></label>
 		<br/>
 		<input type="radio" value="false" id="<?php echo esc_attr( $attr['id'] ) ?>-false"
 		       name="<?php echo esc_attr( $attr['name'] ) ?>"/>
-		<label for="<?php echo esc_attr( $attr['id'] ) ?>-false"><?php _e( 'False', 'unyson' ) ?></label>
+		<label for="<?php echo esc_attr( $attr['id'] ) ?>-false"><?php _e( 'False', 'fw' ) ?></label>
 	</div>
 </div>
