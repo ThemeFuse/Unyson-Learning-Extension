@@ -47,3 +47,39 @@ function fw_ext_learning_student_took_course_redirect( $course_id ) {
 }
 
 add_action( 'fw_ext_learning_student_took_course', 'fw_ext_learning_student_took_course_redirect', 9999 );
+
+/**
+ * @param string $the_content
+ *
+ * @return string
+ */
+function _filter_ext_learning_student_course_the_content( $the_content ) {
+	/**
+	 * @var FW_Extension_Learning $learning
+	 */
+	$learning = fw()->extensions->get( 'learning' );
+
+	if ( ! $learning->is_course() || ! $learning->get_config( 'user-require' ) ) {
+		return $the_content;
+	}
+
+	return $the_content . fw_ext_learning_student_get_take_course_method();
+}
+
+/**
+ * @param string $the_content
+ *
+ * @return string
+ */
+function _filter_ext_learning_student_lesson_the_content( $the_content ) {
+	/**
+	 * @var FW_Extension_Learning $learning
+	 */
+	$learning = fw()->extensions->get( 'learning' );
+
+	if ( ! $learning->is_lesson() || ! $learning->get_config( 'user-require' ) ) {
+		return $the_content;
+	}
+
+	return $the_content . fw_ext_learning_apply_course_get_lesson_pass_method();
+}

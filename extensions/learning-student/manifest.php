@@ -19,11 +19,3 @@ $manifest['requirements'] = array(
 		'learning-apply-course' => array(),
 	)
 );
-$manifest['extensions_manager'] = array(
-	/**
-	 * false  - Do not display on the extensions page
-	 * true   - Display on the extensions page in its own box
-	 * string - "Parent" extension under which this extension will be displayed (this can be not real parent extension)
-	 */
-	'display'    => true,
-);
