@@ -50,7 +50,7 @@ function _filter_admin_manage_lessons_columns_titles( $columns ) {
 	$learning = fw()->extensions->get( 'learning' );
 
 	unset( $columns['date'] );
-	$columns[ $learning->get_name() . '-course' ] = __( 'Course ', 'fw' );
+	$columns[ $learning->get_name() . '-course' ] = __( 'Course', 'fw' );
 
 	return $columns;
 }
