@@ -71,11 +71,11 @@ function _filter_admin_manage_lessons_columns( $column, $ID ) {
 
 	$post = get_post( $ID );
 	if ( is_wp_error( $post ) || empty( $post ) || ( $post->post_parent == 0 ) ) {
-		echo '—';
+		echo '&#8212;';
 	} else {
 		$parent = get_post( $post->post_parent );
 		if ( is_wp_error( $parent ) || empty( $parent ) || ( $parent->post_status == 'trash' || $parent->post_status == 'auto-draft' ) ) {
-			echo '—';
+			echo '&#8212;';
 		} else {
 			$permalink = get_permalink( $parent->ID );
 			echo '<a href="' . $permalink . '">' . $parent->post_title . '</a>';
