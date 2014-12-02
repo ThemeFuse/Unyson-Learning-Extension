@@ -94,7 +94,7 @@ function _filter_ext_learning_course_the_content( $the_content ) {
 	 */
 	$learning = fw()->extensions->get( 'learning' );
 
-	return fw_render_view( $learning->locate_view_path( 'hook-single-course' ),
+	return fw_render_view( $learning->locate_view_path( 'content-course' ),
 		array( 'the_content' => $the_content ) );
 }
 
@@ -109,7 +109,7 @@ function _filter_ext_learning_lesson_the_content( $the_content ) {
 	 */
 	$learning = fw()->extensions->get( 'learning' );
 
-	return fw_render_view( $learning->locate_view_path( 'hook-single-lesson' ),
+	return fw_render_view( $learning->locate_view_path( 'content-lesson' ),
 		array( 'the_content' => $the_content ) );
 }
 
