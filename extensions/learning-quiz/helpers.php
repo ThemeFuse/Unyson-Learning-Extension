@@ -115,6 +115,11 @@ function fw_ext_learning_quiz_get_quiz_permalink( $post_id ) {
 	return get_permalink( $quiz[0] );
 }
 
+/**
+ * @param null|int $id
+ *
+ * @return array|null
+ */
 function fw_ext_learning_quiz_get_response( $id = null ) {
 	if ( is_null( $id ) ) {
 		global $post;

@@ -18,15 +18,15 @@ $pass_mark = (int) fw_get_db_post_option( $lesson->ID, 'learning-quiz-passmark' 
 $text      = '';
 
 if ( $pass_mark > 0 ) {
-	$text = sprintf( __( 'You require %d%% in oder to pass the test', 'unyson' ), $pass_mark );
+	$text = sprintf( __( 'You require %d%% in oder to pass the test', 'fw' ), $pass_mark );
 }
 
 if ( ! empty( $response ) ) {
 	if ( (int) $response['minimum-pass-mark'] > 0 ) {
 		if ( (int) $response['accumulated'] < (int) $response['minimum-pass-mark'] ) {
-			$text = __( 'Sorry, you did not pass the test', 'unyson' );
+			$text = __( 'Sorry, you did not pass the test', 'fw' );
 		} else {
-			$text = __( 'Congratulation, you passed the test', 'unyson' );
+			$text = __( 'Congratulation, you passed the test', 'fw' );
 		}
 	} else {
 		$correct = 0;

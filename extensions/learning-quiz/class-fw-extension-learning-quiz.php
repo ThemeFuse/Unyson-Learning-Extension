@@ -335,7 +335,7 @@ class FW_Extension_Learning_Quiz extends FW_Extension {
 			return;
 		}
 
-		if ( ! fw_ext_learning_quiz_has_quiz( $post->ID ) ) {
+		if ( ! $this->has_quiz( $post->ID ) ) {
 			return;
 		}
 
@@ -425,9 +425,13 @@ class FW_Extension_Learning_Quiz extends FW_Extension {
 			'posts_per_page' => 1,
 		) );
 
+
+
 		if ( empty( $quiz ) ) {
 			return null;
 		}
+		
+		
 
 		return $quiz[0];
 	}

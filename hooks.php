@@ -50,7 +50,7 @@ function _filter_admin_manage_lessons_columns_titles( $columns ) {
 	$learning = fw()->extensions->get( 'learning' );
 
 	unset( $columns['date'] );
-	$columns[ $learning->get_name() . '-course' ] = __( 'Course ', 'fw' );
+	$columns[ $learning->get_name() . '-course' ] = __( 'Course', 'fw' );
 
 	return $columns;
 }
@@ -71,11 +71,11 @@ function _filter_admin_manage_lessons_columns( $column, $ID ) {
 
 	$post = get_post( $ID );
 	if ( is_wp_error( $post ) || empty( $post ) || ( $post->post_parent == 0 ) ) {
-		echo '—';
+		echo '&#8212;';
 	} else {
 		$parent = get_post( $post->post_parent );
 		if ( is_wp_error( $parent ) || empty( $parent ) || ( $parent->post_status == 'trash' || $parent->post_status == 'auto-draft' ) ) {
-			echo '—';
+			echo '&#8212;';
 		} else {
 			$permalink = get_permalink( $parent->ID );
 			echo '<a href="' . $permalink . '">' . $parent->post_title . '</a>';
@@ -94,7 +94,7 @@ function _filter_ext_learning_course_the_content( $the_content ) {
 	 */
 	$learning = fw()->extensions->get( 'learning' );
 
-	return fw_render_view( $learning->locate_view_path( 'hook-single-course' ),
+	return fw_render_view( $learning->locate_view_path( 'content-course' ),
 		array( 'the_content' => $the_content ) );
 }
 
@@ -109,7 +109,7 @@ function _filter_ext_learning_lesson_the_content( $the_content ) {
 	 */
 	$learning = fw()->extensions->get( 'learning' );
 
-	return fw_render_view( $learning->locate_view_path( 'hook-single-lesson' ),
+	return fw_render_view( $learning->locate_view_path( 'content-lesson' ),
 		array( 'the_content' => $the_content ) );
 }
 

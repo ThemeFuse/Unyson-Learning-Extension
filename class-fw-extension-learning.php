@@ -330,7 +330,7 @@ class FW_Extension_Learning extends FW_Extension {
 			'selected'        => $id,
 			'name'            => $this->get_name() . '-filter-by-course-category">',
 			'taxonomy'        => $this->categories,
-			'show_option_all' => __( 'View all categories' ),
+			'show_option_all' => __( 'View all categories', 'fw' ),
 			'hide_empty'      => true,
 			'hierarchical'    => 1,
 			'show_count'      => 0,

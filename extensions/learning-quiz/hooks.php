@@ -87,7 +87,7 @@ function _filter_ext_learning_quiz_the_content( $the_content ) {
 		return $the_content;
 	}
 
-	return $the_content . fw_render_view( $quiz->locate_view_path( 'hook-single' ) );
+	return $the_content . fw_render_view( $quiz->locate_view_path( 'content' ) );
 }
 
 /**
