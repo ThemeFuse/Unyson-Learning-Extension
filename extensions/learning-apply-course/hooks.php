@@ -18,6 +18,7 @@ function _filter_fw_ext_learning_apply_course_the_content( $the_content ) {
 	}
 
 	if ( is_singular( $learning->get_course_post_type() ) && ! $learning->locate_view_path( 'single-course' ) ) {
+
 		return $the_content . fw_ext_learning_student_get_take_course_method();
 	}
 

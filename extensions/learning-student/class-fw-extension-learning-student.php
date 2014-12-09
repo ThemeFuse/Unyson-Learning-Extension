@@ -47,11 +47,17 @@ class FW_Extension_Learning_Student extends FW_Extension {
 	private $pass_lesson_method = null;
 
 	/**
+	 * @var FW_Form
+	 */
+	private $student_account_form = null;
+
+	/**
 	 * @internal
 	 */
 	public function _init() {
 
 		$user_require = $this->get_config( 'user-require' );
+
 		if ( $user_require === false ) {
 			return;
 		}
@@ -290,6 +296,16 @@ class FW_Extension_Learning_Student extends FW_Extension {
 				$this->admin_active_actions();
 				$this->admin_active_filters();
 			} else {
+
+				$this->student_account_form = new FW_Form(
+					$this->get_name() . '-student-account',
+					array(
+						'render'   => array( $this, '_render_student_form' ),
+						'validate' => array( $this, '_validate_student_form' ),
+						'save'     => array( $this, '_save_student_form' ),
+					)
+				);
+
 				$this->theme_active_actions();
 				$this->theme_active_filters();
 			}
@@ -459,6 +475,93 @@ class FW_Extension_Learning_Student extends FW_Extension {
 		}
 	}
 
+	/**
+	 * @internal
+	 *
+	 * @param string $the_content
+	 *
+	 * @return string
+	 */
+	public function _filter_theme_student_account( $the_content ) {
+
+		$courses = $this->get_courses_data();
+
+		if ( empty( $courses ) ) {
+			return $the_content;
+		}
+
+		ob_start();
+		$this->student_account_form->render( array( 'courses' => $courses ) );
+		$html = ob_get_clean();
+
+		return $the_content . $html;
+	}
+
+	/**
+	 * @internal
+	 *
+	 * @param array $data
+	 *
+	 * @return array
+	 */
+	public function _render_student_form( $data ) {
+		$courses = $data['data']['courses'];
+
+		echo '<input type="hidden" name="user-id" value="' . $this->current_user->id() . '">';
+		foreach ( $courses as $course ) {
+			$course['name'] = 'courses[]';
+			echo $this->render_view( 'items/account-course-item', $course );
+		}
+
+		$data['submit']['value'] = __( 'Remove courses', 'fw' );
+
+		return $data;
+	}
+
+	/**
+	 * @internal
+	 *
+	 * @param array $errors
+	 *
+	 * @return array
+	 */
+	public function _validate_student_form( $errors ) {
+
+		$id = FW_Request::POST( 'user-id' );
+
+		if ( $id != $this->current_user->id() ) {
+			$errors['invalid-id'] = __( "Couldn't process the request", 'fw' );
+		}
+
+		return $errors;
+	}
+
+	/**
+	 * @param array $data
+	 *
+	 * @return array
+	 */
+	public function _save_student_form( $data ) {
+		$data['redirect'] = fw_current_url();
+
+		$courses = FW_Request::POST( 'courses' );
+
+		if ( empty( $courses ) ) {
+			FW_Flash_Messages::add( $this->get_name() . '-account-no-courses', __( 'No courses was deleted', 'fw' ) );
+
+			return $data;
+		}
+
+		foreach ( $courses as $course ) {
+			$id = (int) $course;
+			$this->current_user->remove_course( $id );
+		}
+
+		FW_Flash_Messages::add( $this->get_name() . '-account-no-courses', __( 'Courses successfully removed', 'fw' ) );
+
+		return $data;
+	}
+
 	private function add_actions() {
 		add_action( 'init', array( $this, '_action_define_current_user' ) );
 	}
@@ -481,7 +584,7 @@ class FW_Extension_Learning_Student extends FW_Extension {
 	}
 
 	private function theme_active_filters() {
-
+		add_filter( 'fw_ext_users_account_content', array( $this, '_filter_theme_student_account' ) );
 	}
 
 	private function admin_non_active_actions() {
