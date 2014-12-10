@@ -97,4 +97,15 @@ abstract class FW_Option_Type_Quiz_Builder_Item extends FW_Option_Type_Builder_I
 			return $default_path;
 		}
 	}
+
+	/**
+	 * Validate the quiz item
+	 *
+	 * @param array $item
+	 *
+	 * @return bool
+	 */
+	public function validate_item( $item ) {
+		return true;
+	}
 }

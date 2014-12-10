@@ -176,6 +176,17 @@ class FW_Option_Type_Quiz_Builder_Item_Multiple_Choice extends FW_Option_Type_Qu
 
 		return $response;
 	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function validate_item( $item ) {
+		if ( ! isset( $item['correct-answers'] ) || empty( $item['correct-answers'] ) ) {
+			return false;
+		}
+
+		return true;
+	}
 }
 
 FW_Option_Type_Builder::register_item_type( 'FW_Option_Type_Quiz_Builder_Item_Multiple_Choice' );
