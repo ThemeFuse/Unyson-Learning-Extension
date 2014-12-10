@@ -140,6 +140,11 @@ class FW_Extension_Learning_Quiz extends FW_Extension {
 				return;
 			}
 
+			wp_update_post(array(
+				'ID' => $id,
+				'post_title' => $post->post_title . ' ' . __( 'Quiz', 'fw' ),
+			));
+
 			fw_set_db_post_option( $id, $this->get_name() . '-questions', $questions );
 			fw_set_db_post_option( $id, $this->get_name() . '-passmark', $passmark );
 		}
@@ -425,13 +430,9 @@ class FW_Extension_Learning_Quiz extends FW_Extension {
 			'posts_per_page' => 1,
 		) );
 
-
-
 		if ( empty( $quiz ) ) {
 			return null;
 		}
-		
-		
 
 		return $quiz[0];
 	}
