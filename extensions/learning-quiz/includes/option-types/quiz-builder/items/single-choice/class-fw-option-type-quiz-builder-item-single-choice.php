@@ -163,6 +163,20 @@ class FW_Option_Type_Quiz_Builder_Item_Single_Choice extends FW_Option_Type_Quiz
 
 		return $response;
 	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function validate_item( $item ) {
+		if (
+			( ! isset( $item['correct-answer'] ) || empty( $item['correct-answer'] ) )
+			&& ( ! isset( $item['wrong-answers'] ) || empty( $item['wrong-answers'] ) )
+		) {
+			return false;
+		}
+
+		return true;
+	}
 }
 
 FW_Option_Type_Builder::register_item_type( 'FW_Option_Type_Quiz_Builder_Item_Single_Choice' );

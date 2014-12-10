@@ -167,6 +167,22 @@ class FW_Option_Type_Quiz_Builder_Item_Gap_Fill extends FW_Option_Type_Quiz_Buil
 
 		return $response;
 	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function validate_item( $item ) {
+
+		if (
+			! isset( $item['text-before'] ) ||
+			! isset( $item['text-after'] ) ||
+			( empty( $item['text-before'] ) && empty( $item['text-after'] ) )
+		) {
+			return false;
+		}
+
+		return true;
+	}
 }
 
 FW_Option_Type_Builder::register_item_type( 'FW_Option_Type_Quiz_Builder_Item_Gap_Fill' );

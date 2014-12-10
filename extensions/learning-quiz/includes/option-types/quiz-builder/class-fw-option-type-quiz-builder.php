@@ -263,6 +263,13 @@ class FW_Option_Type_Quiz_Builder extends FW_Option_Type_Builder {
 	}
 
 	/**
+	 * @return FW_Option_Type_Quiz_Builder_Item[]
+	 */
+	public function get_items() {
+		return $this->get_item_types();
+	}
+
+	/**
 	 * Search relative path in '/extensions/learning-quiz/includes/options-types/{builder_type}/'
 	 *
 	 * @param string $rel_path
