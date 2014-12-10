@@ -425,13 +425,9 @@ class FW_Extension_Learning_Quiz extends FW_Extension {
 			'posts_per_page' => 1,
 		) );
 
-
-
 		if ( empty( $quiz ) ) {
 			return null;
 		}
-		
-		
 
 		return $quiz[0];
 	}
