@@ -14,63 +14,6 @@ function _action_fw_ext_learning_quiz_remove_quiz_response_from_session() {
 
 add_action( 'wp_footer', '_action_fw_ext_learning_quiz_remove_quiz_response_from_session' );
 
-function _action_fw_ext_learning_quiz_student_access() {
-	/**
-	 * @var FW_Extension_Learning $learning
-	 */
-	$learning = fw()->extensions->get( 'learning' );
-
-	/**
-	 * @var FW_Extension_Learning_Quiz $quiz
-	 */
-	$quiz = fw()->extensions->get( 'learning-quiz' );
-
-	/**
-	 * @var FW_Extension_Learning_Student $student
-	 */
-	$student = fw()->extensions->get( 'learning-student' );
-
-	if ( ! $quiz->is_quiz() ) {
-		return;
-	}
-
-	if ( empty( $student ) ) {
-		return;
-	}
-
-	if ( ! $student->is_student() ) {
-		wp_redirect( home_url() );
-		exit;
-	}
-
-	global $post;
-
-	if ( ! $learning->is_lesson( $post->post_parent ) ) {
-		wp_redirect( home_url() );
-		exit;
-	}
-
-	$previous = $learning->get_previous_lesson( $post->post_parent );
-
-	if ( $previous === false ) {
-		wp_redirect( home_url() );
-		exit;
-	}
-
-	if ( $previous === null ) {
-		return;
-	}
-
-	$lesson_status = $student->get_lessons_data( $previous->ID );
-
-	if ( ! isset( $lesson_status['status'] ) || $lesson_status['status'] != 'completed' ) {
-		wp_redirect( get_permalink( $previous->ID ) );
-		exit();
-	}
-}
-
-add_action( 'wp', '_action_fw_ext_learning_quiz_student_access' );
-
 /**
  * @param string $the_content
  *

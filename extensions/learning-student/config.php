@@ -16,5 +16,5 @@ $cfg['user-capabilities'] = array();
 // Require that user can pass the lessons only in order, or can access/pass them in random order
 $cfg['lessons-in-order'] = true;
 
-// Require that user can pass the lessons only in order, or can access/pass them in random order
+// Show notifications in flash messages
 $cfg['enable-flash-messages'] = true;

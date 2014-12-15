@@ -51,6 +51,14 @@ class FW_Extension_Learning_Student extends FW_Extension {
 	 */
 	private $student_account_form = null;
 
+	private $save_meta = array(
+		'courses'        => false,
+		'courses-status' => false,
+		'lessons'        => false,
+		'lessons-status' => false,
+		'lessons-quiz'   => false,
+	);
+
 	/**
 	 * @internal
 	 */
@@ -65,6 +73,11 @@ class FW_Extension_Learning_Student extends FW_Extension {
 		$this->learning           = fw()->extensions->get( 'learning' );
 		$this->pass_lesson_method = new FW_Learning_Student_Pass_Lesson();
 		$this->take_course_method = new FW_Learning_Student_Take_Course_Default_Method();
+
+		$this->save_meta = array_merge(
+			apply_filters( 'fw_ext_learning_student_save_meta', $this->save_meta ),
+			$this->save_meta
+		);
 
 		$this->define_role();
 		$this->register_role();
@@ -194,6 +207,129 @@ class FW_Extension_Learning_Student extends FW_Extension {
 	public function is_student() {
 
 		if ( $this->id() <= 0 ) {
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Check if the user is subscribed to the current course
+	 *
+	 * @param int $id - course id
+	 *
+	 * @return bool
+	 */
+	public function is_subscribed( $id = null ) {
+		if ( is_null( $id ) && isset( $GLOBALS['post'] ) ) {
+			$id = $GLOBALS['post']->ID;
+		}
+
+		if ( empty( $id ) ) {
+			return null;
+		}
+
+		if ( ! $this->is_student() || ! $this->learning->is_course( $id ) ) {
+			return false;
+		}
+
+		$data = $this->get_courses_data( $id );
+
+		if ( empty( $data ) ) {
+			return false;
+		}
+
+		if ( ! isset( $data['status'] ) || $data['status'] != 'open' ) {
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Checks if the user completed the course
+	 *
+	 * @param int $id - course id
+	 *
+	 * @return bool
+	 */
+	public function has_completed( $id ) {
+		if ( is_null( $id ) && isset( $GLOBALS['post'] ) ) {
+			$id = $GLOBALS['post']->ID;
+		}
+
+		if ( empty( $id ) ) {
+			return null;
+		}
+
+		if ( ! $this->is_student() || ! $this->learning->is_course( $id ) ) {
+			return false;
+		}
+
+		$data = $this->get_courses_data( $id );
+
+		if ( empty( $data ) ) {
+			return false;
+		}
+
+		if ( ! isset( $data['status'] ) || $data['status'] != 'completed' ) {
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Checks if the user passed the lesson
+	 *
+	 * @param int $id - course id
+	 *
+	 * @return bool
+	 */
+	public function has_passed( $id ) {
+		if ( is_null( $id ) && isset( $GLOBALS['post'] ) ) {
+			$id = $GLOBALS['post']->ID;
+		}
+
+		if ( empty( $id ) ) {
+			return null;
+		}
+
+		if ( ! $this->is_student() || ! $this->learning->is_lesson( $id ) ) {
+			return false;
+		}
+
+		$data = $this->get_lessons_data( $id );
+
+		if ( empty( $data ) ) {
+			return false;
+		}
+
+		if ( ! isset( $data['status'] ) || $data['status'] != 'completed' ) {
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * @param int $post_id
+	 *
+	 * @return bool
+	 */
+	public function is_author( $post_id ) {
+
+		if ( ! $this->learning->is_lesson( $post_id ) ) {
+			return false;
+		}
+
+		if ( ! is_user_logged_in() ) {
+			return false;
+		}
+
+		$post = get_post( $post_id );
+
+		if ( $post->post_author != get_current_user_id() ) {
 			return false;
 		}
 
@@ -388,8 +524,12 @@ class FW_Extension_Learning_Student extends FW_Extension {
 	 * @param int $course_id
 	 */
 	public function _action_theme_apply_course_user( $course_id ) {
-		if ( $this->learning->is_course( $course_id ) ) {
-			$this->add_course_data( $course_id, array( 'status' => 'open' ) );
+		if ( ! $this->learning->is_course( $course_id ) ) {
+			return;
+		}
+
+		if ( $this->add_course_data( $course_id, array( 'status' => 'open' ) ) ) {
+			do_action( 'fw_ext_learning_student_completed_course', $course_id );
 		}
 	}
 
@@ -410,57 +550,17 @@ class FW_Extension_Learning_Student extends FW_Extension {
 	 * @param int $lesson_id
 	 */
 	public function _action_theme_user_completed_lesson( $lesson_id ) {
-		if ( $this->learning->is_lesson( $lesson_id ) ) {
-			$this->add_lesson_data( $lesson_id, array( 'status' => 'completed' ) );
+		if ( ! $this->learning->is_lesson( $lesson_id ) ) {
+			return;
 		}
-	}
+		$course = $this->learning->get_lesson_course( $lesson_id );
 
-	/**
-	 * @internal
-	 */
-	public function _action_theme_redirect_from_lesson_page() {
-		global $post;
-
-		if ( ! $this->learning->is_lesson() ) {
+		if ( empty( $course ) || ! $this->is_subscribed( $course->ID ) ) {
 			return;
 		}
 
-		$course = $post->post_parent;
-
-		if ( ! $this->learning->is_course( $course ) ) {
-			return;
-		}
-
-		$course_status = $this->get_courses_data( $course );
-
-		if ( ! is_array( $course_status ) ||
-		     ( $course_status['status'] != 'open' && $course_status['status'] != 'completed' )
-		) {
-			$this->add_flash( __( 'Please apply to this course', 'fw' ) );
-			wp_redirect( get_permalink( $course ) );
-			exit;
-		}
-
-		if ( $this->get_config( 'lessons-in-order' ) == false ) {
-			return;
-		}
-
-		$previous = $this->learning->get_previous_lesson();
-		if ( $previous === false ) {
-			wp_redirect( $post->post_parent );
-			exit;
-		}
-
-		if ( $previous == null ) {
-			return;
-		}
-
-		$previous_status = $this->get_lessons_data( $previous->ID );
-
-		if ( empty( $previous_status['status'] ) || $previous_status['status'] != 'completed' ) {
-			$this->add_flash( __( 'You have to pass previous lesson in order to apply to the current', 'fw' ) );
-			wp_redirect( get_permalink( $previous->ID ) );
-			exit;
+		if ( $this->add_lesson_data( $lesson_id, array( 'status' => 'completed' ) ) ) {
+			do_action( 'fw_ext_learning_student_completed_lesson', $lesson_id );
 		}
 	}
 
@@ -576,11 +676,17 @@ class FW_Extension_Learning_Student extends FW_Extension {
 
 	private function theme_active_actions() {
 		add_action( 'wp', array( $this, '_action_theme_define_pass_lesson_method' ), 10 );
-		add_action( 'wp', array( $this, '_action_theme_redirect_from_lesson_page' ), 10 );
 		add_action( 'fw_ext_learning_student_took_course', array( $this, '_action_theme_apply_course_user' ), 5 );
-		add_action( 'fw_ext_learning_student_completed_course', array( $this, '_action_theme_complete_course_user' ),
-			5 );
+		add_action(
+			'fw_ext_learning_student_completed_course',
+			array( $this, '_action_theme_complete_course_user' ),
+			5
+		);
 		add_action( 'fw_ext_learning_lesson_passed', array( $this, '_action_theme_user_completed_lesson' ), 5 );
+
+		if ( $this->save_meta( 'lesson-quiz' ) ) {
+			add_action( 'fw_ext_learning_quiz_form_process', array( $this, '_action_theme_save_quiz' ), 10 );
+		}
 	}
 
 	private function theme_active_filters() {
@@ -643,5 +749,13 @@ class FW_Extension_Learning_Student extends FW_Extension {
 		if ( $this->get_config( 'enable-flash-messages' ) === true ) {
 			FW_Flash_Messages::add( $this->get_name() . '-flash', $message );
 		}
+	}
+
+	private function save_meta( $meta ) {
+		if ( isset( $this->save_meta[ $meta ] ) && $this->save_meta[ $meta ] === true ) {
+			return true;
+		}
+
+		return false;
 	}
 }

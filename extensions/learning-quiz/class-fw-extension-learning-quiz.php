@@ -254,71 +254,57 @@ class FW_Extension_Learning_Quiz extends FW_Extension {
 			return $options;
 		}
 
-		if ( isset( $options['main'] ) && $options['main']['type'] == 'box' ) {
-			$options['main']['options'][ $this->get_name() ] = array(
-				'title'   => __( 'Lesson Quiz', 'fw' ),
-				'type'    => 'tab',
-				'options' => array(
-					'quiz-tab' => array(
-						'title'   => __( 'Quiz Elements', 'fw' ),
-						'type'    => 'tab',
-						'options' => array(
-							$this->get_name() . '-questions' => array(
-								'label'           => false,
-								'type'            => 'quiz-builder',
-								'fullscreen'      => false,
-								'template_saving' => false,
-							),
-						)
-					),
-					'pass-tab' => array(
-						'title'   => __( 'Quiz settings', 'fw' ),
-						'type'    => 'tab',
-						'options' => array(
-							$this->get_name() . '-passmark' => array(
-								'label' => __( 'Quiz Passmark Percentage', 'fw' ),
-								'type'  => 'text',
-								'desc'  => __( 'The percentage at which the test will be passed.', 'fw' ),
-							),
+		$external_options = array();
+
+		foreach ( apply_filters( 'fw_ext_learning_quiz_settings', array() ) as $key => $option ) {
+			if ( isset( $external_options[ $key ] ) ) {
+				continue;
+			}
+			$external_options[ $key ] = $option;
+		}
+
+		$quiz_options = array(
+			'title'   => __( 'Lesson Quiz', 'fw' ),
+			'type'    => 'tab',
+			'options' => array(
+				'quiz-tab' => array(
+					'title'   => __( 'Quiz Elements', 'fw' ),
+					'type'    => 'tab',
+					'options' => array(
+						$this->get_name() . '-questions' => array(
+							'label'           => false,
+							'type'            => 'quiz-builder',
+							'fullscreen'      => false,
+							'template_saving' => false,
+						),
+					)
+				),
+				'pass-tab' => array(
+					'title'   => __( 'Quiz settings', 'fw' ),
+					'type'    => 'tab',
+					'options' => array(
+						$this->get_name() . '-passmark' => array(
+							'label' => __( 'Quiz Passmark Percentage', 'fw' ),
+							'type'  => 'text',
+							'desc'  => __( 'The percentage at which the test will be passed.', 'fw' ),
+						),
+						'external-options' => array(
+							'type' => 'group',
+							'options' => $external_options
 						)
 					)
-				)
-			);
+				),
+			)
+		);
+
+		if ( isset( $options['main'] ) && $options['main']['type'] == 'box' ) {
+			$options['main']['options'][ $this->get_name() . '-tab' ] = $quiz_options;
 		} else {
 			$options['main'] = array(
 				'title'   => false,
 				'type'    => 'box',
 				'options' => array(
-					'lesson-quiz-tab' => array(
-						'title'   => __( 'Lesson Quiz', 'fw' ),
-						'type'    => 'tab',
-						'options' => array(
-							'quiz-tab' => array(
-								'title'   => __( 'Quiz Elements', 'fw' ),
-								'type'    => 'tab',
-								'options' => array(
-									$this->get_name() . '-questions' => array(
-										'label'              => false,
-										'type'               => 'quiz-builder',
-										'fullscreen'         => false,
-										'template_saving'    => false,
-										'editor_integration' => true
-									),
-								)
-							),
-							'pass-tab' => array(
-								'title'   => __( 'Quiz settings', 'fw' ),
-								'type'    => 'tab',
-								'options' => array(
-									$this->get_name() . '-passmark' => array(
-										'label' => __( 'Quiz Passmark Percentage', 'fw' ),
-										'type'  => 'text',
-										'desc'  => __( 'The percentage at which the test will be passed.', 'fw' ),
-									),
-								)
-							)
-						)
-					)
+					'lesson-quiz-tab' => $quiz_options
 				)
 			);
 		}

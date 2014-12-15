@@ -699,7 +699,6 @@ class FW_Extension_Learning extends FW_Extension {
 	 * @return bool
 	 */
 	public function is_lesson( $lesson_id = null ) {
-
 		if ( $lesson_id === 0 ) {
 			return false;
 		}
@@ -821,6 +820,35 @@ class FW_Extension_Learning extends FW_Extension {
 			'post_status'    => 'any',
 			'posts_per_page' => - 1,
 		) );
+	}
+
+	/**
+	 * Return the lesson course post
+	 *
+	 * @param int $id
+	 *
+	 * @return null|WP_Post
+	 */
+	public function get_lesson_course( $id = null ) {
+		if ( is_null( $id ) && isset( $GLOBALS['post'] ) ) {
+			$id = $GLOBALS['post']->ID;
+		}
+
+		if ( empty( $id ) ) {
+			return null;
+		}
+
+		if ( ! $this->is_lesson( $id ) ) {
+			return null;
+		}
+
+		$lesson = get_post( $id );
+
+		if ( ! $this->is_course( $lesson->post_parent ) ) {
+			return null;
+		}
+
+		return get_post( $lesson->post_parent );
 	}
 
 	private function admin_filters() {

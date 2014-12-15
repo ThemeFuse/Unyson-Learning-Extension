@@ -318,6 +318,11 @@ class FW_Quiz_Question_Process_Response {
 	private $current_percentage = 0;
 
 	/**
+	 * @var int|float
+	 */
+	private $mark = 0;
+
+	/**
 	 * @var string
 	 */
 	private $comments = '';
@@ -401,6 +406,15 @@ class FW_Quiz_Question_Process_Response {
 	}
 
 	/**
+	 * @param int|float $mark
+	 */
+	public function set_mark( $mark ) {
+		if ( is_float( $mark ) || is_int( $mark ) ) {
+			$this->mark = $mark;
+		}
+	}
+
+	/**
 	 * @param string $comments
 	 */
 	public function set_comments( $comments ) {
@@ -442,6 +456,10 @@ class FW_Quiz_Question_Process_Response {
 	 */
 	public function get_current_percentage() {
 		return $this->current_percentage;
+	}
+
+	public function get_mark() {
+		return $this->mark;
 	}
 
 	/**

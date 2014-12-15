@@ -86,9 +86,6 @@ class FW_Learning_Student {
 		$response = $this->add_user_data( $user_data );
 
 		if ( $response === true ) {
-			if ( ! $exist ) {
-				fw_add_user_meta( $this->id(), $this->learning_student->get_name() . '-course-id', $course_id );
-			}
 			do_action( 'fw_ext_learning_student_update_student_courses_data', $this->user_data->ID,
 				$courses_data[ $course_id ] );
 
@@ -115,10 +112,11 @@ class FW_Learning_Student {
 		$data = $this->get_user_data();
 
 		unset( $data['courses'][ $course_id ] );
-		fw_delete_user_meta( $this->user_data->ID, $this->learning_student->get_name() . '-course-id', $course_id );
+		do_action( 'fw_ext_learning_student_remove_course', $this->user_data->ID, $course_id );
 
 		if ( ! empty( $data['lessons'] ) ) {
 			foreach ( $data['lessons'] as $id => $lesson ) {
+				//fixme: May be to use remove_lesson()
 				if ( $lesson['course-id'] == $course_id ) {
 					unset( $data['lessons'][ $id ] );
 				}
@@ -143,6 +141,7 @@ class FW_Learning_Student {
 
 		$data = $this->get_user_data();
 		unset( $data['lessons'][ $lesson_id ] );
+		do_action( 'fw_ext_learning_student_remove_lesson', $this->user_data->ID, $lesson_id );
 
 		$this->add_user_data( $data );
 	}
