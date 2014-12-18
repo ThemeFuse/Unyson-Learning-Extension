@@ -32,12 +32,12 @@ class FW_Extension_Learning_Student extends FW_Extension {
 	private $learning = null;
 
 	/**
-	 * @var FW_Learning_Student_Take_Course_Default_Method
+	 * @var FW_Learning_Student_Take_Course_Method
 	 */
 	private $take_course_method = null;
 
 	/**
-	 * @var FW_Learning_Student_Complete_Course
+	 * @var FW_Learning_Complete_Course
 	 */
 	private $complete_course_method = null;
 
@@ -51,14 +51,6 @@ class FW_Extension_Learning_Student extends FW_Extension {
 	 */
 	private $student_account_form = null;
 
-	private $save_meta = array(
-		'courses'        => false,
-		'courses-status' => false,
-		'lessons'        => false,
-		'lessons-status' => false,
-		'lessons-quiz'   => false,
-	);
-
 	/**
 	 * @internal
 	 */
@@ -70,38 +62,14 @@ class FW_Extension_Learning_Student extends FW_Extension {
 			return;
 		}
 
-		$this->learning           = fw()->extensions->get( 'learning' );
-		$this->pass_lesson_method = new FW_Learning_Student_Pass_Lesson();
-		$this->take_course_method = new FW_Learning_Student_Take_Course_Default_Method();
-
-		$this->save_meta = array_merge(
-			apply_filters( 'fw_ext_learning_student_save_meta', $this->save_meta ),
-			$this->save_meta
-		);
+		$this->learning               = fw()->extensions->get( 'learning' );
+		$this->pass_lesson_method     = new FW_Learning_Student_Pass_Lesson();
+		$this->take_course_method     = new FW_Learning_Student_Take_Course_Method();
+		$this->complete_course_method = new FW_Learning_student_Complete_Course_Method();
 
 		$this->define_role();
 		$this->register_role();
 		$this->add_actions();
-	}
-
-	/**
-	 * @param FW_Learning_Student_Complete_Course $method
-	 */
-	public function set_complete_course_method( FW_Learning_Student_Complete_Course $method ) {
-
-		//If the current method is not set or has low priority automatically set the new method
-		if ( empty( $this->complete_course_method ) || ( $this->complete_course_method->get_priority() == false ) ) {
-			$this->complete_course_method = $method;
-
-			return;
-		}
-
-		//If current method has high priority, need to check the priority of the new method
-		if ( $method->get_priority() == true ) {
-			$this->complete_course_method = $method;
-
-			return;
-		}
 	}
 
 	/**
@@ -683,10 +651,6 @@ class FW_Extension_Learning_Student extends FW_Extension {
 			5
 		);
 		add_action( 'fw_ext_learning_lesson_passed', array( $this, '_action_theme_user_completed_lesson' ), 5 );
-
-		if ( $this->save_meta( 'lesson-quiz' ) ) {
-			add_action( 'fw_ext_learning_quiz_form_process', array( $this, '_action_theme_save_quiz' ), 10 );
-		}
 	}
 
 	private function theme_active_filters() {
@@ -749,13 +713,5 @@ class FW_Extension_Learning_Student extends FW_Extension {
 		if ( $this->get_config( 'enable-flash-messages' ) === true ) {
 			FW_Flash_Messages::add( $this->get_name() . '-flash', $message );
 		}
-	}
-
-	private function save_meta( $meta ) {
-		if ( isset( $this->save_meta[ $meta ] ) && $this->save_meta[ $meta ] === true ) {
-			return true;
-		}
-
-		return false;
 	}
 }

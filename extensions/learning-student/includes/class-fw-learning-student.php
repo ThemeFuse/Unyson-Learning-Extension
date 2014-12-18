@@ -19,6 +19,13 @@ class FW_Learning_Student {
 	 */
 	private $learning_student = null;
 
+	private $save_meta = array(
+		'courses'        => false,
+		'courses-status' => false,
+		'lessons'        => false,
+		'lessons-status' => false,
+	);
+
 	/**
 	 * @internal
 	 *
@@ -28,6 +35,11 @@ class FW_Learning_Student {
 		$this->user_data        = get_userdata( $user_id );
 		$this->learning         = fw()->extensions->get( 'learning' );
 		$this->learning_student = fw()->extensions->get( 'learning-student' );
+
+		$this->save_meta = array_merge(
+			$this->save_meta,
+			apply_filters( 'fw_ext_learning_student_save_meta', $this->save_meta )
+		);
 	}
 
 	/**
@@ -85,9 +97,22 @@ class FW_Learning_Student {
 
 		$response = $this->add_user_data( $user_data );
 
-		if ( $response === true ) {
+		if ( $response == true ) {
 			do_action( 'fw_ext_learning_student_update_student_courses_data', $this->user_data->ID,
 				$courses_data[ $course_id ] );
+
+			if ( isset( $this->save_meta['courses'] ) && $this->save_meta['courses'] == true ) {
+				fw_update_user_meta( $this->id(), 'learning-student-courses', $course_id );
+			}
+
+			if (
+				isset( $this->save_meta['courses-status'] )
+				&& $this->save_meta['courses-status'] == true
+				&& isset( $courses_data[ $course_id ]['status'] )
+			) {
+				fw_update_user_meta( $this->id(), 'learning-student-courses-status-' . $course_id,
+					$courses_data[ $course_id ]['status'] );
+			}
 
 			return true;
 		}
@@ -193,6 +218,19 @@ class FW_Learning_Student {
 		if ( $response === true ) {
 			do_action( 'fw_ext_learning_student_update_student_lessons_data', $this->user_data->ID,
 				$lessons_data[ $lesson_id ] );
+
+			if ( isset( $this->save_meta['lessons'] ) && $this->save_meta['lessons'] == true ) {
+				fw_update_user_meta( $this->id(), 'learning-student-lessons', $lesson_id );
+			}
+
+			if (
+				isset( $this->save_meta['lessons-status'] )
+				&& $this->save_meta['lessons-status'] == true
+				&& isset( $lessons_data[ $lesson_id ]['status'] )
+			) {
+				fw_update_user_meta( $this->id(), 'learning-student-lessons-status-' . $lesson_id,
+					$lessons_data[ $lesson_id ]['status'] );
+			}
 
 			return true;
 		}

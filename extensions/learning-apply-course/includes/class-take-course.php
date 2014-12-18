@@ -69,39 +69,45 @@ abstract class FW_Learning_Take_Course {
 	public final function take_course( $course_id ) {
 		do_action( 'fw_ext_learning_student_took_course', $course_id );
 	}
+
+	/**
+	 * Check if a specific course post has take method
+	 *
+	 * @param int $course_id
+	 *
+	 * @return bool
+	 */
+	public function has_method( $course_id ) {
+		return true;
+	}
 }
 
 class FW_Learning_Take_Course_Default_Method extends FW_Learning_Take_Course {
 
 	/**
-	 * @var FW_Extension_Learning
-	 */
-	private $learning = null;
-
-	/**
-	 * @internal
+	 * {@inheritdoc}
 	 */
 	public function _init() {
-		$this->learning = fw()->extensions->get( 'learning' );
 	}
 
 	/**
-	 * @param int $course_id
-	 *
-	 * @return string
+	 * {@inheritdoc}
 	 */
 	public function get_method( $course_id ) {
-		if ( $this->learning->is_course() ) {
-			$this->take_course( $course_id );
-		}
-
 		return '';
 	}
 
 	/**
-	 * @return bool
+	 * {@inheritdoc}
 	 */
 	public function get_priority() {
+		return false;
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function has_method( $course_id ) {
 		return false;
 	}
 }

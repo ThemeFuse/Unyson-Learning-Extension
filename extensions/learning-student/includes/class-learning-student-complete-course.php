@@ -2,71 +2,111 @@
 	die( 'Forbidden' );
 }
 
-abstract class FW_Learning_Student_Complete_Course {
+class FW_Learning_Student_Complete_Course_Method extends FW_Learning_Complete_Course {
+
+	/**
+	 * @var FW_Form
+	 */
+	private $form = null;
+
+	/**
+	 * @var FW_Extension_Learning
+	 */
+	private $learning = null;
 
 	/**
 	 * @var FW_Extension_Learning_Student
 	 */
-	private $parent = null;
+	private $student = null;
 
 	/**
-	 * Sometimes the method may not confirm at init that is ready or not, or it will be used or not.
-	 * In this case in _init() method set the $is_ready member to false.
-	 * If the method will need to have to register latter, you have to use the register_method() method manually;
-	 *
-	 * @var bool
+	 * @internal
 	 */
-	protected $is_ready = true;
+	public function _init() {
+		$this->learning = fw()->extensions->get( 'learning' );
+		$this->student  = fw()->extensions->get( 'learning-student' );
+
+		$this->form = new FW_Form( $this->student->get_name() . '-complete-course', array(
+			'render'   => array( $this, '_form_render' ),
+			'validate' => array( $this, '_form_validate' ),
+			'save'     => array( $this, '_form_save' ),
+		) );
+	}
 
 	/**
-	 * Used in case the class needs to initialize data;
-	 *
-	 * @return void
-	 */
-	abstract public function _init();
-
-	/**
-	 * Return the method will be used to complete the course.
-	 *
 	 * @param int $course_id
 	 *
 	 * @return string
 	 */
-	abstract public function get_method( $course_id );
+	public function get_method( $course_id ) {
+
+		if (
+			empty( $course_id )
+			|| ! $this->parent->has_course_take_method( $course_id )
+			|| ! $this->student->is_subscribed( $course_id )
+			|| $this->student->has_completed( $course_id )
+		) {
+			return '';
+		}
+
+		$this->register_method();
+
+		FW_Session::set( FW_Session::get( $this->student->get_name() . '-complete-course-id' ), $course_id );
+
+		ob_start();
+
+		$this->form->render();
+
+		return ob_get_clean();
+	}
 
 	/**
-	 * Set the priority. Priority is used to understand the importance of the take method, and if there are other method,
-	 * to overwrite it or not
-	 *
-	 * true - priority is important
-	 * false - priority is low
-	 *
-	 * Note: In case you'll set priority true(high), doesn't mean that this method will be used, this will depend on the
-	 * order the method was initialised, the las initialised will be used.
-	 *
 	 * @return bool
 	 */
-	abstract public function get_priority();
-
-	final public function __construct() {
-		$this->parent = fw()->extensions->get( 'learning-student' );
-		$this->_init();
-
-		if ( $this->is_ready === true ) {
-			$this->register_method();
-		}
-	}
-
-	final public function register_method() {
-		$this->parent->set_complete_course_method( $this );
+	public function get_priority() {
+		return false;
 	}
 
 	/**
-	 * Confirm that the course was took
+	 * @internal
 	 *
-	 * @param int $course_id
+	 * @param array $data
+	 *
+	 * @return array
 	 */
-	public final function complete_course( $course_id ) {
-		do_action( 'fw_ext_learning_student_completed_course', $course_id );
+	public function _form_render( $data ) {
+
+		echo fw_render_view( $this->student->locate_view_path( 'complete-course' ) );
+
+		$data['submit']['html'] = '';
+
+		return $data;
+	}
+
+	/**
+	 * @internal
+	 *
+	 * @param array $errors
+	 *
+	 * @return array
+	 */
+	public function _form_validate( array $errors ) {
+
+		if ( ! $this->learning->is_course( (int) FW_Session::get( $this->student->get_name() . '-complete-course-id' ), -1 ) ) {
+			$errors['corrupt-course-id'] = '';
+
+			return $errors;
+		}
+
+		return array();
+	}
+
+	/**
+	 * @internal
+	 */
+	public function _form_save() {
+		$course_id = (int) FW_Session::get( $this->student->get_name() . '-complete-course-id' );
+		FW_Session::del( $this->student->get_name() . '-complete-course-id' );
+		$this->complete_course( $course_id );
 	}
 }

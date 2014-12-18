@@ -91,7 +91,7 @@ class FW_Extension_Learning_Grading extends FW_Extension {
 	 * @param int $post_id
 	 * @param WP_Post $post
 	 */
-	public function _action_admin_attach_quiz_to_lesson( $post_id, $post ) {
+	public function _action_admin_save_quiz_type( $post_id, $post ) {
 		if ( $post->post_type != $this->learning->get_lesson_post_type() ) {
 			return;
 		}
@@ -113,7 +113,7 @@ class FW_Extension_Learning_Grading extends FW_Extension {
 			$this->get_name(),
 			array( $this, '_instructor_page' ),
 			'dashicons-businessman',
-			7
+			8
 		);
 	}
 
@@ -140,7 +140,7 @@ class FW_Extension_Learning_Grading extends FW_Extension {
 	}
 
 	private function admin_actions() {
-		add_action( 'fw_save_post_options', array( $this, '_action_admin_attach_quiz_to_lesson' ), 9, 2 );
+		add_action( 'fw_save_post_options', array( $this, '_action_admin_save_quiz_type' ), 9, 2 );
 		add_action( 'admin_menu', array( $this, '_action_admin_add_admin_menu' ) );
 	}
 

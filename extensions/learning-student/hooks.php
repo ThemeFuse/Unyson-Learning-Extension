@@ -125,7 +125,7 @@ function _action_fw_ext_learning_student_redirect_from_lesson_page() {
 	}
 }
 
-add_action( 'wp', '_action_fw_ext_learning_student_redirect_from_lesson_page', 10 );
+//add_action( 'wp', '_action_fw_ext_learning_student_redirect_from_lesson_page', 10 );
 
 function _action_fw_ext_learning_student_quiz_access() {
 
@@ -186,19 +186,3 @@ function _action_fw_ext_learning_student_quiz_access() {
 }
 
 add_action( 'wp', '_action_fw_ext_learning_student_quiz_access' );
-
-//Save user meta
-{
-	function fw_ext_learning_student_add_course_meta( $user_id, $course ) {
-		$meta = get_user_meta( $user_id, 'learning-student-courses' );
-
-		if ( is_array( $meta ) && in_array( $course['id'], $meta ) ) {
-			return;
-		}
-
-		fw_add_user_meta( $user_id, 'learning-student-courses', $course['id'] );
-		fw_add_user_meta( $user_id, 'learning-student-course-status-' . $course['id'], $course['status'] );
-	}
-
-	add_action( 'fw_ext_learning_student_update_student_courses_data', 'fw_ext_learning_student_add_course_meta', 2 );
-}

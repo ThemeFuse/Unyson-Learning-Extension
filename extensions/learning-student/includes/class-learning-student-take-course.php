@@ -2,7 +2,7 @@
 	die( 'Forbidden' );
 }
 
-class FW_Learning_Student_Take_Course_Default_Method extends FW_Learning_Take_Course {
+class FW_Learning_Student_Take_Course_Method extends FW_Learning_Take_Course {
 
 	/**
 	 * @var FW_Form

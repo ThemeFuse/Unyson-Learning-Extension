@@ -13,6 +13,8 @@ function _filter_fw_ext_learning_apply_course_the_content( $the_content ) {
 	 */
 	$learning = fw()->extensions->get( 'learning' );
 
+	//TODO: Decide how to add Complete Course
+
 	if ( ! $learning->is_lesson() && ! $learning->is_course() ) {
 		return $the_content;
 	}

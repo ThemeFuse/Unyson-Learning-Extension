@@ -41,16 +41,11 @@ class FW_Learning_Student_Pass_Lesson extends FW_Learning_Pass_Lesson {
 	 */
 	public function get_method( $lesson_id ) {
 
-		$lesson_status = $this->student->get_lessons_data( $lesson_id );
-
-		if ( is_array( $lesson_status ) && $lesson_status['status'] == 'completed' ) {
+		if ( $this->student->has_passed( $lesson_id ) ) {
 			return '';
 		}
 
-		if ( ! isset( $_SESSION ) ) {
-			session_start();
-		}
-		$_SESSION[ $this->student->get_name() . '-pass-lesson-id' ] = $lesson_id;
+		FW_Session::set( $this->student->get_name() . '-pass-lesson-id', $lesson_id );
 
 		ob_start();
 
@@ -90,20 +85,7 @@ class FW_Learning_Student_Pass_Lesson extends FW_Learning_Pass_Lesson {
 	 * @return array
 	 */
 	public function _form_validate( array $errors ) {
-
-		if ( ! isset( $_SESSION ) ) {
-			session_start();
-		}
-
-		if ( ! isset( $_SESSION[ $this->student->get_name() . '-pass-lesson-id' ] ) ) {
-			$errors['corrupt-lesson-id'] = '';
-
-			return $errors;
-		}
-
-		$lesson_id = (int) $_SESSION[ $this->student->get_name() . '-pass-lesson-id' ];
-
-		if ( ! $this->learning->is_lesson( $lesson_id ) ) {
+		if ( ! $this->learning->is_lesson( (int) FW_Session::get( $this->student->get_name() . '-pass-lesson-id', -1 ) ) ) {
 			$errors['corrupt-lesson-id'] = '';
 
 			return $errors;

@@ -2,12 +2,12 @@
 	die( 'Forbidden' );
 }
 
-abstract class FW_Learning_Pass_Lesson {
+abstract class FW_Learning_Complete_Course {
 
 	/**
 	 * @var FW_Extension_Learning_Apply_Course
 	 */
-	private $parent = null;
+	protected $parent = null;
 
 	/**
 	 * Sometimes the method may not confirm at init that is ready or not, or it will be used or not.
@@ -26,17 +26,16 @@ abstract class FW_Learning_Pass_Lesson {
 	abstract public function _init();
 
 	/**
-	 * Return the method will be used to pass the article, this will be an html form to take a test ot a simple button
-	 * to confirm that user passed the article.
+	 * Return the method will be used to complete the course.
 	 *
-	 * @param int $lesson_id
+	 * @param int $course_id
 	 *
 	 * @return string
 	 */
-	abstract public function get_method( $lesson_id );
+	abstract public function get_method( $course_id );
 
 	/**
-	 * Set the priority. Priority is used to understand the importance of the pass method, and if there are other method,
+	 * Set the priority. Priority is used to understand the importance of the take method, and if there are other method,
 	 * to overwrite it or not
 	 *
 	 * true - priority is important
@@ -59,47 +58,58 @@ abstract class FW_Learning_Pass_Lesson {
 	}
 
 	final public function register_method() {
-		$this->parent->set_lesson_pass_method( $this );
+		$this->parent->set_complete_course_method( $this );
 	}
 
 	/**
-	 * Confirm that the course was passed
+	 * Confirm that the course was completed
 	 *
-	 * @param int $lesson_id
+	 * @param int $course_id
 	 */
-	public final function pass_lesson( $lesson_id ) {
-		do_action( 'fw_ext_learning_lesson_passed', $lesson_id );
+	public final function complete_course( $course_id ) {
+		do_action( 'fw_ext_learning_student_completed_course', $course_id );
 	}
 
 	/**
-	 * Check if a specific lesson post has pass method
+	 * Check if a specific course post has complete method
 	 *
-	 * @param int $lesson_id
+	 * @param int $course_id
 	 *
 	 * @return bool
 	 */
-	public function has_method( $lesson_id ) {
+	public function has_method( $course_id ) {
 		return true;
 	}
 }
 
-class FW_Learning_Default_Pass_Lesson extends FW_Learning_Pass_Lesson {
+class FW_Learning_Complete_Course_Default_Method extends FW_Learning_Complete_Course {
 
+	/**
+	 * {@inheritdoc}
+	 */
 	public function _init() {
-
 	}
 
-	public function get_method( $lesson_id ) {
+	/**
+	 * {@inheritdoc}
+	 */
+	public function get_method( $course_id ) {
 		return '';
 	}
 
+	/**
+	 * {@inheritdoc}
+	 */
 	public function get_priority() {
 		return false;
 	}
 
-	public function has_method( $lesson_id ) {
+	/**
+	 * {@inheritdoc}
+	 */
+	public function has_method( $course_id ) {
 		return false;
 	}
 }
 
-new FW_Learning_Default_Pass_Lesson();
+new FW_Learning_Complete_Course_Default_Method;

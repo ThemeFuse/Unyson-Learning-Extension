@@ -617,7 +617,7 @@ class FW_Extension_Learning_Quiz extends FW_Extension {
 		$return['accumulated']       = $total;
 		$return['minimum-pass-mark'] = (int) fw_get_db_post_option( $post_id, $this->get_name() . '-passmark' );
 
-		do_action( 'fw_ext_learning_quiz_form_process', $return );
+		do_action( 'fw_ext_learning_quiz_form_process', $return, $post_id );
 
 		if ( $total >= $return['minimum-pass-mark'] ) {
 			$lesson = get_post( $post_id )->post_parent;
