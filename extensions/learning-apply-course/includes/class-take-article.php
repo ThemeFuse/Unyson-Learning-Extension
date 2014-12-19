@@ -2,7 +2,7 @@
 	die( 'Forbidden' );
 }
 
-abstract class FW_Learning_Take_Course {
+abstract class FW_Learning_Take_Lesson {
 
 	/**
 	 * @var FW_Extension_Learning_Apply_Course
@@ -26,13 +26,14 @@ abstract class FW_Learning_Take_Course {
 	abstract public function _init();
 
 	/**
-	 * Return the method will be used to take the course.
+	 * Return the method will be used to take the article, this will be an html form to take a test ot a simple button
+	 * to confirm that user passed the article.
 	 *
-	 * @param int $course_id
+	 * @param int $lesson_id
 	 *
 	 * @return string
 	 */
-	abstract public function get_method( $course_id );
+	abstract public function get_method( $lesson_id );
 
 	/**
 	 * Set the priority. Priority is used to understand the importance of the take method, and if there are other method,
@@ -58,42 +59,43 @@ abstract class FW_Learning_Take_Course {
 	}
 
 	final public function register_method() {
-		$this->parent->set_take_course_method( $this );
+		$this->parent->set_lesson_take_method( $this );
 	}
 
 	/**
-	 * Confirm that the course was took
+	 * Confirm that the course was taken
 	 *
-	 * @param int $course_id
+	 * @param int $lesson_id
 	 */
-	public final function take_course( $course_id ) {
-		do_action( 'fw_ext_learning_student_took_course', $course_id );
+	public final function take_lesson( $lesson_id ) {
+		do_action( 'fw_ext_learning_lesson_taken', $lesson_id );
 	}
 
 	/**
-	 * Check if a specific course post has take method
+	 * Check if a specific lesson post has taken method
 	 *
-	 * @param int $course_id
+	 * @param int $lesson_id
 	 *
 	 * @return bool
 	 */
-	public function has_method( $course_id ) {
+	public function has_method( $lesson_id ) {
 		return true;
 	}
 }
 
-class FW_Learning_Take_Course_Default_Method extends FW_Learning_Take_Course {
+class FW_Learning_Default_Take_Lesson extends FW_Learning_Take_Lesson {
 
 	/**
 	 * {@inheritdoc}
 	 */
 	public function _init() {
+
 	}
 
 	/**
 	 * {@inheritdoc}
 	 */
-	public function get_method( $course_id ) {
+	public function get_method( $lesson_id ) {
 		return '';
 	}
 
@@ -107,9 +109,9 @@ class FW_Learning_Take_Course_Default_Method extends FW_Learning_Take_Course {
 	/**
 	 * {@inheritdoc}
 	 */
-	public function has_method( $course_id ) {
+	public function has_method( $lesson_id ) {
 		return true;
 	}
 }
 
-new FW_Learning_Take_Course_Default_Method;
+new FW_Learning_Default_Take_Lesson();

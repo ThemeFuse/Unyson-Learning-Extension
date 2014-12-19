@@ -40,18 +40,13 @@ class FW_Learning_Student_Take_Course_Method extends FW_Learning_Take_Course {
 	 */
 	public function get_method( $course_id ) {
 
-		$course_status = $this->student->get_courses_data( $course_id );
-
-		if ( is_array( $course_status ) && ( $course_status['status'] == 'open' || $course_status['status'] == 'completed' ) ) {
+		if ( $this->student->is_subscribed( $course_id ) ) {
 			return '';
 		}
 
 		$this->register_method();
 
-		if ( ! isset( $_SESSION ) ) {
-			session_start();
-		}
-		$_SESSION[ $this->student->get_name() . '-take-course-id' ] = $course_id;
+		FW_Session::set( $this->student->get_name() . '-take-course-id', $course_id );
 
 		ob_start();
 
@@ -92,20 +87,8 @@ class FW_Learning_Student_Take_Course_Method extends FW_Learning_Take_Course {
 	 */
 	public function _form_validate( array $errors ) {
 
-		if ( ! isset( $_SESSION ) ) {
-			session_start();
-		}
-
-		if ( ! isset( $_SESSION[ $this->student->get_name() . '-take-course-id' ] ) ) {
-			$errors['corrupt-course-id'] = '';
-
-			return $errors;
-		}
-
-		$course_id = (int) $_SESSION[ $this->student->get_name() . '-take-course-id' ];
-
-		if ( ! $this->learning->is_course( $course_id ) ) {
-			$errors['corrupt-course-id'] = '';
+		if ( ! $this->learning->is_course( (int) FW_Session::get( $this->student->get_name() . '-take-course-id' ) ) ) {
+			$errors['corrupt-course-id'] = __( 'Unable to process the request', 'fw' );
 
 			return $errors;
 		}
@@ -117,8 +100,12 @@ class FW_Learning_Student_Take_Course_Method extends FW_Learning_Take_Course {
 	 * @internal
 	 */
 	public function _form_save() {
-		$course_id = (int) $_SESSION[ $this->student->get_name() . '-take-course-id' ];
-		unset( $_SESSION[ $this->student->get_name() . '-take-course-id' ] );
+		$course_id = (int) FW_Session::get( $this->student->get_name() . '-take-course-id' );
+		FW_Session::del( $this->student->get_name() . '-take-course-id' );
+
 		$this->take_course( $course_id );
+
+		wp_redirect( get_permalink( $course_id ) );
+		exit;
 	}
 }

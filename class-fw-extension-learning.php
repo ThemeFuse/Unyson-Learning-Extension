@@ -721,6 +721,40 @@ class FW_Extension_Learning extends FW_Extension {
 	}
 
 	/**
+	 * Checks if the lesson is the first course lesson
+	 *
+	 * @param null|int $lesson_id
+	 *
+	 * @return bool
+	 */
+	public function is_first_lesson( $lesson_id = null ) {
+		$prev = $this->get_previous_lesson( $lesson_id );
+
+		if ( $prev === false || ! is_null( $prev ) ) {
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Checks if the lesson is the last course lesson
+	 *
+	 * @param null|int $lesson_id
+	 *
+	 * @return bool
+	 */
+	public function is_last_lesson( $lesson_id = null ) {
+		$next = $this->get_next_lesson( $lesson_id );
+
+		if ( $next === false || ! is_null( $next ) ) {
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
 	 * Get the previous lesson of the current course,
 	 * If $lesson_id is null, will be used the global $post
 	 * If the provided lesson id is not valid, returns false
@@ -807,7 +841,7 @@ class FW_Extension_Learning extends FW_Extension {
 	/**
 	 * @param int $course_id
 	 *
-	 * @return array
+	 * @return WP_Post[]
 	 */
 	public function get_course_lessons( $course_id = 0 ) {
 		if ( ! $this->is_course( $course_id ) ) {

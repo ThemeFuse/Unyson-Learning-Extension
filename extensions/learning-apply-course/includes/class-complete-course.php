@@ -67,7 +67,7 @@ abstract class FW_Learning_Complete_Course {
 	 * @param int $course_id
 	 */
 	public final function complete_course( $course_id ) {
-		do_action( 'fw_ext_learning_student_completed_course', $course_id );
+		do_action( 'fw_ext_learning_completed_course', $course_id );
 	}
 
 	/**
@@ -108,7 +108,7 @@ class FW_Learning_Complete_Course_Default_Method extends FW_Learning_Complete_Co
 	 * {@inheritdoc}
 	 */
 	public function has_method( $course_id ) {
-		return false;
+		return true;
 	}
 }
 

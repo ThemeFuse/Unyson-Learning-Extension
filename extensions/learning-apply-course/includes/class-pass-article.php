@@ -85,20 +85,32 @@ abstract class FW_Learning_Pass_Lesson {
 
 class FW_Learning_Default_Pass_Lesson extends FW_Learning_Pass_Lesson {
 
+	/**
+	 * {@inheritdoc}
+	 */
 	public function _init() {
 
 	}
 
+	/**
+	 * {@inheritdoc}
+	 */
 	public function get_method( $lesson_id ) {
 		return '';
 	}
 
+	/**
+	 * {@inheritdoc}
+	 */
 	public function get_priority() {
 		return false;
 	}
 
+	/**
+	 * {@inheritdoc}
+	 */
 	public function has_method( $lesson_id ) {
-		return false;
+		return true;
 	}
 }
 

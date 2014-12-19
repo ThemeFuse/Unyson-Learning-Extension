@@ -25,7 +25,7 @@ class FW_Learning_Student_Pass_Lesson extends FW_Learning_Pass_Lesson {
 	public function _init() {
 		$this->is_ready = false;
 		$this->learning = fw()->extensions->get( 'learning' );
-		$this->student = fw()->extensions->get( 'learning-student' );
+		$this->student  = fw()->extensions->get( 'learning-student' );
 
 		$this->form = new FW_Form( $this->student->get_name() . '-pass-lesson', array(
 			'render'   => array( $this, '_form_render' ),
@@ -85,22 +85,46 @@ class FW_Learning_Student_Pass_Lesson extends FW_Learning_Pass_Lesson {
 	 * @return array
 	 */
 	public function _form_validate( array $errors ) {
-		if ( ! $this->learning->is_lesson( (int) FW_Session::get( $this->student->get_name() . '-pass-lesson-id', -1 ) ) ) {
+		if ( ! $this->learning->is_lesson( (int) FW_Session::get( $this->student->get_name() . '-pass-lesson-id', - 1 ) )
+		) {
 			$errors['corrupt-lesson-id'] = '';
 
 			return $errors;
 		}
 
-		return array();
+		$lesson_id = (int) FW_Session::get( $this->student->get_name() . '-pass-lesson-id' );
+		$course    = $this->learning->get_lesson_course( $lesson_id );
+
+		if ( $course instanceof WP_Post && ! $this->student->is_subscribed( $course->ID ) ) {
+			$errors['unsubscribed-course'] = __( 'You have to subscribe to the course in order to pass the lesson',
+				'fw' );
+
+			return $errors;
+		}
+
+		if (
+			$this->student->get_config( 'lessons-in-order' ) == true
+			&& (
+				! $this->learning->is_first_lesson( $lesson_id )
+				&& ! $this->student->has_passed( $this->learning->get_previous_lesson( $lesson_id )->ID )
+			)
+		) {
+			$errors['unpassed-previous-lesson'] = __( 'You have to pass the previous lesson in order to pass the current one',
+				'fw' );
+
+			return $errors;
+		}
+
+		return $errors;
 	}
 
 	/**
 	 * @internal
 	 */
 	public function _form_save() {
-		$lesson_id = (int) $_SESSION[ $this->student->get_name() . '-pass-lesson-id' ];
+		$lesson_id = (int) FW_Session::get( $this->student->get_name() . '-pass-lesson-id' );
 
-		unset( $_SESSION[ $this->student->get_name() . '-pass-lesson-id' ] );
+		FW_Session::del( $this->student->get_name() . '-pass-lesson-id' );
 
 		$this->pass_lesson( $lesson_id );
 	}

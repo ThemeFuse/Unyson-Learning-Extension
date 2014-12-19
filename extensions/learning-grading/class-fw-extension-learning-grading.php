@@ -33,28 +33,45 @@ class FW_Extension_Learning_Grading extends FW_Extension {
 	private $learning = null;
 
 	/**
+	 * @var FW_Extension_Learning_Quiz
+	 */
+	private $quiz = null;
+
+	/**
+	 * @var FW_Extension_Learning_Student
+	 */
+	private $student = null;
+
+	/**
 	 * @internal
 	 */
 	public function _init() {
 
-		$this->learning = fw()->extensions->get( 'learning' );
+		$this->learning = fw_ext( 'learning' );
+		$this->quiz = fw_ext( 'learning-quiz' );
+		$this->student = fw_ext( 'learning-student' );
 		$this->define_role();
 		$this->register_role();
 
 		if ( is_admin() ) {
 			$this->admin_filters();
 			$this->admin_actions();
+		} else {
+			$this->theme_actions();
 		}
 	}
 
 	public function _instructor_page() {
-		echo $this->render_view(
-			'quiz-listing',
-			array(
-				'title' => 'Lessons',
-				'posts' => get_posts(array('post_type' => 'fw-learning-quiz'))
-			)
-		);
+		$table = new FW_Learning_Grading_WP_List_Table();
+		$table->prepare_items();
+		?>
+		<div class="wrap">
+			<div id="icon-users" class="icon32"></div>
+			<h2><?php _e( 'Quiz List', 'fw' ); ?></h2>
+			<?php $table->display(); ?>
+		</div>
+	<?php
+
 	}
 
 	/**
@@ -105,6 +122,9 @@ class FW_Extension_Learning_Grading extends FW_Extension {
 		}
 	}
 
+	/**
+	 * @internal
+	 */
 	public function _action_admin_add_admin_menu() {
 		add_menu_page(
 			__( 'Instructor', 'fw' ),
@@ -115,6 +135,56 @@ class FW_Extension_Learning_Grading extends FW_Extension {
 			'dashicons-businessman',
 			8
 		);
+	}
+
+	/**
+	 * @internal
+	 * 
+	 * @param array $return
+	 * @param int $id
+	 */
+	public function _action_theme_process_quiz( $return, $id ) {
+		if ( ! $this->quiz->is_quiz( $id ) ) {
+			return;
+		}
+
+		if ( $this->requires_instructor( $id ) ) {
+			$return['status'] = 'pending';
+		} else {
+			if ( $return['minimum-pass-mark'] <= $return['accumulated'] ) {
+				$return['status'] = 'passed';
+			} else {
+				$return['status'] = 'failed';
+			}
+		}
+		
+		$lesson = get_post( $id )->post_parent;
+		
+		$data = array(
+			'quiz' => $return
+		);
+
+		$this->student->add_lesson_data( $lesson, $data );
+		fw_update_user_meta( $this->student->id(), $this->get_name() . '-quiz-status-' . $id, $return['status'] );
+	}
+
+	/**
+	 * Check if the quiz requires instructor to be processed
+	 * 
+	 * @param int $id
+	 *
+	 * @return bool
+	 */
+	public function requires_instructor( $id ) {
+		if ( empty($id) || ! $this->quiz->is_quiz( $id ) ) {
+			return false;
+		}
+
+		if ( fw_get_db_post_option( $id, $this->get_name() . '-process-manually' == true ) ) {
+			return true;
+		}
+		
+		return false;
 	}
 
 	private function define_role() {
@@ -146,5 +216,9 @@ class FW_Extension_Learning_Grading extends FW_Extension {
 
 	private function admin_filters() {
 		add_action( 'fw_ext_learning_quiz_settings', array( $this, '_action_filter_set_quiz_options' ) );
+	}
+
+	private function theme_actions() {
+		add_action( 'fw_ext_learning_quiz_form_process', array( $this, '_action_theme_process_quiz' ), 2, 10 );
 	}
 }

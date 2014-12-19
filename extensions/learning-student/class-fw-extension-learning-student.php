@@ -32,14 +32,14 @@ class FW_Extension_Learning_Student extends FW_Extension {
 	private $learning = null;
 
 	/**
+	 * @var FW_Extension_Learning_Apply_Course
+	 */
+	private $apply_to_course = null;
+
+	/**
 	 * @var FW_Learning_Student_Take_Course_Method
 	 */
 	private $take_course_method = null;
-
-	/**
-	 * @var FW_Learning_Complete_Course
-	 */
-	private $complete_course_method = null;
 
 	/**
 	 * @var FW_Learning_Student_Pass_Lesson
@@ -62,10 +62,10 @@ class FW_Extension_Learning_Student extends FW_Extension {
 			return;
 		}
 
-		$this->learning               = fw()->extensions->get( 'learning' );
-		$this->pass_lesson_method     = new FW_Learning_Student_Pass_Lesson();
-		$this->take_course_method     = new FW_Learning_Student_Take_Course_Method();
-		$this->complete_course_method = new FW_Learning_student_Complete_Course_Method();
+		$this->learning           = fw()->extensions->get( 'learning' );
+		$this->apply_to_course    = fw()->extensions->get( 'learning-apply-course' );
+		$this->pass_lesson_method = new FW_Learning_Student_Pass_Lesson();
+		$this->take_course_method = new FW_Learning_Student_Take_Course_Method();
 
 		$this->define_role();
 		$this->register_role();
@@ -221,7 +221,7 @@ class FW_Extension_Learning_Student extends FW_Extension {
 	 *
 	 * @return bool
 	 */
-	public function has_completed( $id ) {
+	public function has_completed( $id = null ) {
 		if ( is_null( $id ) && isset( $GLOBALS['post'] ) ) {
 			$id = $GLOBALS['post']->ID;
 		}
@@ -248,13 +248,46 @@ class FW_Extension_Learning_Student extends FW_Extension {
 	}
 
 	/**
+	 * Checks if the lesson is the current user active lesson of the course
+	 *
+	 * @param $id
+	 *
+	 * @return bool
+	 */
+	public function is_studying( $id = null ) {
+		if ( is_null( $id ) && isset( $GLOBALS['post'] ) ) {
+			$id = $GLOBALS['post']->ID;
+		}
+
+		if ( empty( $id ) ) {
+			return null;
+		}
+
+		if ( ! $this->is_student() || ! $this->learning->is_lesson( $id ) ) {
+			return false;
+		}
+
+		$data = $this->get_lessons_data( $id );
+
+		if ( empty( $data ) ) {
+			return false;
+		}
+
+		if ( ! isset( $data['status'] ) || $data['status'] != 'open' ) {
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
 	 * Checks if the user passed the lesson
 	 *
 	 * @param int $id - course id
 	 *
 	 * @return bool
 	 */
-	public function has_passed( $id ) {
+	public function has_passed( $id = null ) {
 		if ( is_null( $id ) && isset( $GLOBALS['post'] ) ) {
 			$id = $GLOBALS['post']->ID;
 		}
@@ -517,6 +550,24 @@ class FW_Extension_Learning_Student extends FW_Extension {
 	 *
 	 * @param int $lesson_id
 	 */
+	public function _action_theme_student_took_lesson( $lesson_id ) {
+		if ( ! $this->learning->is_lesson( $lesson_id ) ) {
+			return;
+		}
+		$course = $this->learning->get_lesson_course( $lesson_id );
+
+		if ( empty( $course ) || ! $this->is_subscribed( $course->ID ) ) {
+			return;
+		}
+
+		$this->add_lesson_data( $lesson_id, array( 'status' => 'open' ) );
+	}
+
+	/**
+	 * @internal
+	 *
+	 * @param int $lesson_id
+	 */
 	public function _action_theme_user_completed_lesson( $lesson_id ) {
 		if ( ! $this->learning->is_lesson( $lesson_id ) ) {
 			return;
@@ -529,7 +580,31 @@ class FW_Extension_Learning_Student extends FW_Extension {
 
 		if ( $this->add_lesson_data( $lesson_id, array( 'status' => 'completed' ) ) ) {
 			do_action( 'fw_ext_learning_student_completed_lesson', $lesson_id );
+
+			if ( ! $this->learning->is_last_lesson( $lesson_id ) ) {
+				$this->apply_to_course->take_lesson( $this->learning->get_next_lesson( $lesson_id )->ID );
+			}
 		}
+	}
+
+	/**
+	 * @internal
+	 *
+	 * @param int $lesson_id
+	 */
+	public function _action_theme_complete_course_method( $lesson_id ) {
+
+		$course = $this->learning->get_lesson_course( $lesson_id );
+
+		if (
+			empty( $course )
+			|| ! $this->learning->is_course( $course->ID )
+			|| ! $this->check_if_user_completed_the_course( $course->ID )
+		) {
+			return;
+		}
+
+		$this->apply_to_course->complete_course( $course->ID );
 	}
 
 	/**
@@ -645,11 +720,10 @@ class FW_Extension_Learning_Student extends FW_Extension {
 	private function theme_active_actions() {
 		add_action( 'wp', array( $this, '_action_theme_define_pass_lesson_method' ), 10 );
 		add_action( 'fw_ext_learning_student_took_course', array( $this, '_action_theme_apply_course_user' ), 5 );
-		add_action(
-			'fw_ext_learning_student_completed_course',
-			array( $this, '_action_theme_complete_course_user' ),
-			5
-		);
+		add_action( 'fw_ext_learning_student_completed_lesson', array( $this, '_action_theme_complete_course_method' ),
+			5 );
+		add_action( 'fw_ext_learning_completed_course', array( $this, '_action_theme_complete_course_user' ), 5 );
+		add_action( 'fw_ext_learning_lesson_taken', array( $this, '_action_theme_student_took_lesson' ), 5 );
 		add_action( 'fw_ext_learning_lesson_passed', array( $this, '_action_theme_user_completed_lesson' ), 5 );
 	}
 
@@ -713,5 +787,21 @@ class FW_Extension_Learning_Student extends FW_Extension {
 		if ( $this->get_config( 'enable-flash-messages' ) === true ) {
 			FW_Flash_Messages::add( $this->get_name() . '-flash', $message );
 		}
+	}
+
+	private function check_if_user_completed_the_course( $course_id ) {
+		$lessons = $this->learning->get_course_lessons( $course_id );
+
+		if ( empty( $lessons ) ) {
+			return true;
+		}
+
+		foreach ( $lessons as $lesson ) {
+			if ( ! $this->has_passed( $lesson->ID ) ) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 }
