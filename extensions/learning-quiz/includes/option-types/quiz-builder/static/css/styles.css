@@ -36,16 +36,6 @@
 	font-size: 16px;
 }
 
-.fw-option-type-quiz-builder .builder-item-type:hover,
-.fw-option-type-quiz-builder .builder-item:hover {
-	cursor: pointer;
-}
-
-.fw-option-type-quiz-builder .builder-item-type.ui-sortable-helper,
-.fw-option-type-quiz-builder .builder-item.ui-sortable-helper {
-	cursor: move;
-}
-
 .fw-option-type-quiz-builder .builder-item:hover .fw-quiz-item-control-buttons {
 	display: inline-block;
 }
