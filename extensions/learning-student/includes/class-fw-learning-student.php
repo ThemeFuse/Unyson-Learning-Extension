@@ -27,8 +27,6 @@ class FW_Learning_Student {
 	);
 
 	/**
-	 * @internal
-	 *
 	 * @param int $user_id
 	 */
 	public function __construct( $user_id ) {
@@ -46,7 +44,180 @@ class FW_Learning_Student {
 	 * @return int
 	 */
 	public function id() {
+		if ( empty( $this->user_data ) ) {
+			return 0;
+		}
 		return $this->user_data->ID;
+	}
+
+	/**
+	 * Check if the current user is a student or not
+	 *
+	 * @return bool
+	 */
+	public function is_student() {
+
+		if ( $this->id() <= 0 ) {
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Check if the user is subscribed to the current course
+	 *
+	 * @param int $id - course id
+	 *
+	 * @return bool
+	 */
+	public function is_subscribed( $id = null ) {
+		if ( is_null( $id ) && isset( $GLOBALS['post'] ) ) {
+			$id = $GLOBALS['post']->ID;
+		}
+
+		if ( empty( $id ) ) {
+			return null;
+		}
+
+		if ( ! $this->is_student() || ! $this->learning->is_course( $id ) ) {
+			return false;
+		}
+
+		$data = $this->get_courses_data( $id );
+
+		if ( empty( $data ) ) {
+			return false;
+		}
+
+		if ( ! isset( $data['status'] ) || $data['status'] != 'open' ) {
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Checks if the user completed the course
+	 *
+	 * @param int $id - course id
+	 *
+	 * @return bool
+	 */
+	public function has_completed( $id = null ) {
+		if ( is_null( $id ) && isset( $GLOBALS['post'] ) ) {
+			$id = $GLOBALS['post']->ID;
+		}
+
+		if ( empty( $id ) ) {
+			return null;
+		}
+
+		if ( ! $this->is_student() || ! $this->learning->is_course( $id ) ) {
+			return false;
+		}
+
+		$data = $this->get_courses_data( $id );
+
+		if ( empty( $data ) ) {
+			return false;
+		}
+
+		if ( ! isset( $data['status'] ) || $data['status'] != 'completed' ) {
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Checks if the lesson is the current user active lesson of the course
+	 *
+	 * @param $id
+	 *
+	 * @return bool
+	 */
+	public function is_studying( $id = null ) {
+		if ( is_null( $id ) && isset( $GLOBALS['post'] ) ) {
+			$id = $GLOBALS['post']->ID;
+		}
+
+		if ( empty( $id ) ) {
+			return null;
+		}
+
+		if ( ! $this->is_student() || ! $this->learning->is_lesson( $id ) ) {
+			return false;
+		}
+
+		$data = $this->get_lessons_data( $id );
+
+		if ( empty( $data ) ) {
+			return false;
+		}
+
+		if ( ! isset( $data['status'] ) || $data['status'] != 'open' ) {
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Checks if the user passed the lesson
+	 *
+	 * @param int $id - course id
+	 *
+	 * @return bool
+	 */
+	public function has_passed( $id = null ) {
+		if ( is_null( $id ) && isset( $GLOBALS['post'] ) ) {
+			$id = $GLOBALS['post']->ID;
+		}
+
+		if ( empty( $id ) ) {
+			return null;
+		}
+
+		if ( ! $this->is_student() || ! $this->learning->is_lesson( $id ) ) {
+			return false;
+		}
+
+		$data = $this->get_lessons_data( $id );
+
+		if ( empty( $data ) ) {
+			return false;
+		}
+
+		if ( ! isset( $data['status'] ) || $data['status'] != 'completed' ) {
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * @param int $post_id
+	 *
+	 * @return bool
+	 */
+	public function is_author( $post_id ) {
+
+		if ( ! $this->learning->is_lesson( $post_id ) ) {
+			return false;
+		}
+
+		if ( ! is_user_logged_in() ) {
+			return false;
+		}
+
+		$post = get_post( $post_id );
+
+		if ( $post->post_author != get_current_user_id() ) {
+			return false;
+		}
+
+		return true;
 	}
 
 	/**

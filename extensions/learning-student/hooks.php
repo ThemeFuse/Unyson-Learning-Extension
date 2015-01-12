@@ -53,7 +53,7 @@ function _action_fw_ext_learning_student_manage_user_location() {
 	 */
 	$quiz = fw_ext( 'learning-quiz' );
 
-	if ( is_admin() || $student->is_author( $post->ID ) ) {
+	if ( is_admin() || empty( $post ) || $student->is_author( $post->ID ) ) {
 		return;
 	}
 

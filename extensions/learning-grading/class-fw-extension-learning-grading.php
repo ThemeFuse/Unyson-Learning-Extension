@@ -46,10 +46,9 @@ class FW_Extension_Learning_Grading extends FW_Extension {
 	 * @internal
 	 */
 	public function _init() {
-
 		$this->learning = fw_ext( 'learning' );
-		$this->quiz = fw_ext( 'learning-quiz' );
-		$this->student = fw_ext( 'learning-student' );
+		$this->quiz     = fw_ext( 'learning-quiz' );
+		$this->student  = fw_ext( 'learning-student' );
 		$this->define_role();
 		$this->register_role();
 
@@ -61,17 +60,63 @@ class FW_Extension_Learning_Grading extends FW_Extension {
 		}
 	}
 
-	public function _instructor_page() {
-		$table = new FW_Learning_Grading_WP_List_Table();
+	private function _quiz_listing() {
+		$table = new FW_Learning_Grading_Quiz_WP_List_Table();
 		$table->prepare_items();
 		?>
 		<div class="wrap">
-			<div id="icon-users" class="icon32"></div>
 			<h2><?php _e( 'Quiz List', 'fw' ); ?></h2>
 			<?php $table->display(); ?>
 		</div>
 	<?php
+	}
 
+	private function _quiz_users( $id ) {
+		$table = new FW_Learning_Grading_Students_WP_List_Table( array( 'quiz-id' => $id ) );
+		$table->prepare_items();
+		?>
+		<div class="wrap">
+			<h2><?php _e( 'Users List', 'fw' ); ?></h2>
+			<?php $table->display(); ?>
+		</div>
+	<?php
+	}
+
+	private function _quiz_review( $id, $user_id ) {
+		fw_print( 'quiz review' );
+	}
+
+	public function _display_admin_page() {
+		$quiz_id = ( int ) FW_Request::GET( 'quiz-id' );
+		$user_id = ( int ) FW_Request::GET( 'user-id' );
+		$page    = FW_Request::GET( 'sub-page' );
+
+		if ( $this->quiz->is_quiz( $quiz_id ) ) {
+			$quiz = get_post( $quiz_id );
+
+			switch ( $page ) {
+				case 'users' :
+					$this->_quiz_users( $quiz_id );
+					break;
+				case 'review' :
+					$user = new FW_Learning_Student( $user_id );
+
+					if (
+						! $user->id()
+						|| ( $user->is_studying( $quiz->post_parent ) && $user->has_passed( $quiz->post_parent ) )
+					) {
+						$this->_quiz_users( $quiz_id );
+						break;
+					}
+
+					$this->_quiz_review( $quiz_id, $user_id );
+					break;
+				default :
+					$this->_quiz_listing();
+			}
+		} else {
+			$this->_quiz_listing();
+		}
 	}
 
 	/**
@@ -84,17 +129,18 @@ class FW_Extension_Learning_Grading extends FW_Extension {
 	public function _action_filter_set_quiz_options( $options ) {
 		$grading_options = array(
 			$this->get_name() . '-process-manually' => array(
-				'type'  => 'switch',
-				'value' => false,
-				'label' => __('Process quiz manually', 'fw'),
-				'desc'  => __('The quiz requires to be reviewed by lesson author before grading the student', 'fw'),
-				'left-choice' => array(
+				'type'         => 'switch',
+				'value'        => false,
+				'label'        => __( 'Process quiz manually', 'fw' ),
+				'desc'         => __( 'The quiz requires to be reviewed by lesson author before grading the student',
+					'fw' ),
+				'left-choice'  => array(
 					'value' => false,
-					'label' => __('No', 'fw'),
+					'label' => __( 'No', 'fw' ),
 				),
 				'right-choice' => array(
 					'value' => true,
-					'label' => __('Yes', 'fw'),
+					'label' => __( 'Yes', 'fw' ),
 				),
 			)
 		);
@@ -113,12 +159,20 @@ class FW_Extension_Learning_Grading extends FW_Extension {
 			return;
 		}
 
+		$quiz = $this->quiz->get_lesson_quiz( $post_id );
+
+		if ( empty( $quiz ) ) {
+			return;
+		}
+
 		$option = fw_get_db_post_option( $post_id, $this->get_name() . '-process-manually' );
 
+		fw_set_db_post_option( $quiz->ID, $this->get_name() . '-process-manually', $option );
+
 		if ( $option ) {
-			update_post_meta( $post_id, $this->get_name() . '-process-manually', true );
+			update_post_meta( $quiz->ID, $this->get_name() . '-process-manually', true );
 		} else {
-			update_post_meta( $post_id, $this->get_name() . '-process-manually', false );
+			update_post_meta( $quiz->ID, $this->get_name() . '-process-manually', false );
 		}
 	}
 
@@ -131,7 +185,7 @@ class FW_Extension_Learning_Grading extends FW_Extension {
 			__( 'Instructor', 'fw' ),
 			'publish_posts',
 			$this->get_name(),
-			array( $this, '_instructor_page' ),
+			array( $this, '_display_admin_page' ),
 			'dashicons-businessman',
 			8
 		);
@@ -139,7 +193,7 @@ class FW_Extension_Learning_Grading extends FW_Extension {
 
 	/**
 	 * @internal
-	 * 
+	 *
 	 * @param array $return
 	 * @param int $id
 	 */
@@ -157,33 +211,33 @@ class FW_Extension_Learning_Grading extends FW_Extension {
 				$return['status'] = 'failed';
 			}
 		}
-		
+
 		$lesson = get_post( $id )->post_parent;
-		
+
 		$data = array(
 			'quiz' => $return
 		);
 
 		$this->student->add_lesson_data( $lesson, $data );
-		fw_update_user_meta( $this->student->id(), $this->get_name() . '-quiz-status-' . $id, $return['status'] );
+		fw_update_user_meta( $this->student->id(), 'learning-grading-quiz-status-' . $id, $return['status'] );
 	}
 
 	/**
 	 * Check if the quiz requires instructor to be processed
-	 * 
+	 *
 	 * @param int $id
 	 *
 	 * @return bool
 	 */
 	public function requires_instructor( $id ) {
-		if ( empty($id) || ! $this->quiz->is_quiz( $id ) ) {
+		if ( empty( $id ) || ! $this->quiz->is_quiz( $id ) ) {
 			return false;
 		}
 
-		if ( fw_get_db_post_option( $id, $this->get_name() . '-process-manually' == true ) ) {
+		if ( fw_get_db_post_option( $id, $this->get_name() . '-process-manually' ) == true ) {
 			return true;
 		}
-		
+
 		return false;
 	}
 
@@ -210,7 +264,7 @@ class FW_Extension_Learning_Grading extends FW_Extension {
 	}
 
 	private function admin_actions() {
-		add_action( 'fw_save_post_options', array( $this, '_action_admin_save_quiz_type' ), 9, 2 );
+		add_action( 'fw_save_post_options', array( $this, '_action_admin_save_quiz_type' ), 10, 2 );
 		add_action( 'admin_menu', array( $this, '_action_admin_add_admin_menu' ) );
 	}
 

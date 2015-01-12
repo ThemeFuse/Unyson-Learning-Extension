@@ -173,12 +173,7 @@ class FW_Extension_Learning_Student extends FW_Extension {
 	 * @return bool
 	 */
 	public function is_student() {
-
-		if ( $this->id() <= 0 ) {
-			return false;
-		}
-
-		return true;
+		return $this->current_user->is_student();
 	}
 
 	/**
@@ -189,29 +184,7 @@ class FW_Extension_Learning_Student extends FW_Extension {
 	 * @return bool
 	 */
 	public function is_subscribed( $id = null ) {
-		if ( is_null( $id ) && isset( $GLOBALS['post'] ) ) {
-			$id = $GLOBALS['post']->ID;
-		}
-
-		if ( empty( $id ) ) {
-			return null;
-		}
-
-		if ( ! $this->is_student() || ! $this->learning->is_course( $id ) ) {
-			return false;
-		}
-
-		$data = $this->get_courses_data( $id );
-
-		if ( empty( $data ) ) {
-			return false;
-		}
-
-		if ( ! isset( $data['status'] ) || $data['status'] != 'open' ) {
-			return false;
-		}
-
-		return true;
+		return $this->current_user->is_subscribed( $id );
 	}
 
 	/**
@@ -222,29 +195,7 @@ class FW_Extension_Learning_Student extends FW_Extension {
 	 * @return bool
 	 */
 	public function has_completed( $id = null ) {
-		if ( is_null( $id ) && isset( $GLOBALS['post'] ) ) {
-			$id = $GLOBALS['post']->ID;
-		}
-
-		if ( empty( $id ) ) {
-			return null;
-		}
-
-		if ( ! $this->is_student() || ! $this->learning->is_course( $id ) ) {
-			return false;
-		}
-
-		$data = $this->get_courses_data( $id );
-
-		if ( empty( $data ) ) {
-			return false;
-		}
-
-		if ( ! isset( $data['status'] ) || $data['status'] != 'completed' ) {
-			return false;
-		}
-
-		return true;
+		return $this->current_user->has_completed( $id );
 	}
 
 	/**
@@ -255,29 +206,7 @@ class FW_Extension_Learning_Student extends FW_Extension {
 	 * @return bool
 	 */
 	public function is_studying( $id = null ) {
-		if ( is_null( $id ) && isset( $GLOBALS['post'] ) ) {
-			$id = $GLOBALS['post']->ID;
-		}
-
-		if ( empty( $id ) ) {
-			return null;
-		}
-
-		if ( ! $this->is_student() || ! $this->learning->is_lesson( $id ) ) {
-			return false;
-		}
-
-		$data = $this->get_lessons_data( $id );
-
-		if ( empty( $data ) ) {
-			return false;
-		}
-
-		if ( ! isset( $data['status'] ) || $data['status'] != 'open' ) {
-			return false;
-		}
-
-		return true;
+		return $this->current_user->is_studying( $id );
 	}
 
 	/**
@@ -288,53 +217,16 @@ class FW_Extension_Learning_Student extends FW_Extension {
 	 * @return bool
 	 */
 	public function has_passed( $id = null ) {
-		if ( is_null( $id ) && isset( $GLOBALS['post'] ) ) {
-			$id = $GLOBALS['post']->ID;
-		}
-
-		if ( empty( $id ) ) {
-			return null;
-		}
-
-		if ( ! $this->is_student() || ! $this->learning->is_lesson( $id ) ) {
-			return false;
-		}
-
-		$data = $this->get_lessons_data( $id );
-
-		if ( empty( $data ) ) {
-			return false;
-		}
-
-		if ( ! isset( $data['status'] ) || $data['status'] != 'completed' ) {
-			return false;
-		}
-
-		return true;
+		return $this->current_user->has_passed( $id );
 	}
 
 	/**
-	 * @param int $post_id
+	 * @param int $id
 	 *
 	 * @return bool
 	 */
-	public function is_author( $post_id ) {
-
-		if ( ! $this->learning->is_lesson( $post_id ) ) {
-			return false;
-		}
-
-		if ( ! is_user_logged_in() ) {
-			return false;
-		}
-
-		$post = get_post( $post_id );
-
-		if ( $post->post_author != get_current_user_id() ) {
-			return false;
-		}
-
-		return true;
+	public function is_author( $id ) {
+		return $this->current_user->is_author( $id );
 	}
 
 	/**
@@ -771,15 +663,6 @@ class FW_Extension_Learning_Student extends FW_Extension {
 
 	private function set_current_user() {
 		$user_id = (int) get_current_user_id();
-
-		if ( $user_id == 0 ) {
-			return;
-		}
-
-		if ( ! user_can( $user_id, 'read' ) ) {
-			return;
-		}
-
 		$this->current_user = new FW_Learning_Student( $user_id );
 	}
 
