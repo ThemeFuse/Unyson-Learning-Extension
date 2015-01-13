@@ -4,12 +4,25 @@
 
 class FW_Learning_Grading_Students_WP_List_Table extends FW_WP_List_Table {
 
+	private $items_per_page = 20;
+	private $total_items = null;
+	private $quiz_id = 0;
+
 	/**
 	 * Prepare the items for the table to process
 	 *
 	 * @return Void
 	 */
 	public function prepare_items() {
+		$this->quiz_id = (int) $this->_args['quiz-id'];
+		$this->items_count();
+		$this->items_per_page = ( ( int ) $this->_args['number'] > 0 ) ? (int) $this->_args['number'] : $this->items_per_page;
+
+		$this->set_pagination_args( array(
+			'total_items' => $this->total_items,
+			'per_page'    => $this->items_per_page
+		) );
+
 		$columns  = $this->get_columns();
 		$hidden   = $this->get_hidden_columns();
 		$sortable = $this->get_sortable_columns();
@@ -92,42 +105,40 @@ class FW_Learning_Grading_Students_WP_List_Table extends FW_WP_List_Table {
 
 	private function table_data() {
 		$data    = array();
-		$quiz_id = (int) $this->_args['quiz-id'];
 
-		if ( ! fw_ext( 'learning-quiz' )->is_quiz( $quiz_id ) ) {
+		if ( ! fw_ext( 'learning-quiz' )->is_quiz( $this->quiz_id ) ) {
 			return $data;
 		}
 
-		$quiz = get_post( $quiz_id );
-		$offset = 0; // TODO: Define number
-		$number = 0; // TODO: Define offset
+		$quiz = get_post( $this->quiz_id );
+
 		$users  = new WP_User_Query( array(
-			'number'     => $number,
-			'offset'     => $offset,
+			'number'     => $this->items_per_page,
+			'offset'     => $this->get_pagenum() - 1,
 			'meta_query' => array(
 				'relation' => 'OR',
 				array(
-					'key'   => 'learning-grading--quiz-status-' . $quiz->ID,
+					'key'   => 'learning-grading-quiz-status-' . $quiz->ID,
 					'value' => 'pending',
 				),
 				array(
-					'key'   => 'learning-grading--quiz-status-' . $quiz->ID,
+					'key'   => 'learning-grading-quiz-status-' . $quiz->ID,
 					'value' => 'passed',
 				),
 				array(
-					'key'   => 'learning-grading--quiz-status-' . $quiz->ID,
+					'key'   => 'learning-grading-quiz-status-' . $quiz->ID,
 					'value' => 'failed',
 				),
 			)
 		) );
 
 		foreach ( $users->get_results() as $user ) {
-			$name = '<a href="' . menu_page_url( 'learning-grading', false )
-			        . '&sub-page=review&quiz-id=' . $quiz_id . '&user-id=' . $user->ID . '">'
+			$name = '<strong><a class="row-title" href="' . menu_page_url( 'learning-grading', false )
+			        . '&sub-page=review&quiz-id=' . $this->quiz_id . '&user-id=' . $user->ID . '">'
 			        . get_user_meta( $user->ID, 'first_name' )[0]
 			        . ' '
 			        . get_user_meta( $user->ID, 'last_name' )[0]
-			        . '</a>';
+			        . '</a></strong>';
 
 			$student = new FW_Learning_Student( $user->ID );
 			$meta    = $student->get_lessons_data( $quiz->post_parent );
@@ -140,5 +151,30 @@ class FW_Learning_Grading_Students_WP_List_Table extends FW_WP_List_Table {
 
 
 		return $data;
+	}
+
+	private function items_count() {
+		if ( is_null( $this->total_items) ) {
+			$query  = new WP_User_Query( array(
+				'number'     => 0,
+				'meta_query' => array(
+					'relation' => 'OR',
+					array(
+						'key'   => 'learning-grading-quiz-status-' . $this->quiz_id,
+						'value' => 'pending',
+					),
+					array(
+						'key'   => 'learning-grading-quiz-status-' . $this->quiz_id,
+						'value' => 'passed',
+					),
+					array(
+						'key'   => 'learning-grading-quiz-status-' . $this->quiz_id,
+						'value' => 'failed',
+					),
+				)
+			) );
+
+			$this->total_items = $query->get_total();
+		}
 	}
 }

@@ -42,6 +42,8 @@ class FW_Extension_Learning_Grading extends FW_Extension {
 	 */
 	private $student = null;
 
+	private $admin_page_url = '';
+
 	/**
 	 * @internal
 	 */
@@ -61,28 +63,41 @@ class FW_Extension_Learning_Grading extends FW_Extension {
 	}
 
 	private function _quiz_listing() {
-		$table = new FW_Learning_Grading_Quiz_WP_List_Table();
-		$table->prepare_items();
-		?>
-		<div class="wrap">
-			<h2><?php _e( 'Quiz List', 'fw' ); ?></h2>
-			<?php $table->display(); ?>
-		</div>
-	<?php
+		echo fw_render_view(
+			$this->get_declared_path() . '/views/quiz-listing.php',
+			array(
+				'number' => 20,
+			)
+		);
 	}
 
 	private function _quiz_users( $id ) {
-		$table = new FW_Learning_Grading_Students_WP_List_Table( array( 'quiz-id' => $id ) );
-		$table->prepare_items();
-		?>
-		<div class="wrap">
-			<h2><?php _e( 'Users List', 'fw' ); ?></h2>
-			<?php $table->display(); ?>
-		</div>
-	<?php
+
+		if ( ! $this->student->is_author( $id ) ) {
+			$id = 0;
+		}
+
+		echo fw_render_view(
+			$this->get_declared_path() . '/views/users-listing.php',
+			array(
+				'id'     => $id,
+				'number' => 20,
+			)
+		);
 	}
 
-	private function _quiz_review( $id, $user_id ) {
+	private function _quiz_review( $quiz_id, $user_id ) {
+		$user = new FW_Learning_Student( $user_id );
+		$quiz = get_post( $quiz_id );
+
+		if (
+			! $user->id()
+			|| ! $this->quiz->is_quiz( $quiz_id )
+			|| ( $user->is_studying( $quiz->post_parent ) && $user->has_passed( $quiz->post_parent ) )
+		) {
+
+		}
+
 		fw_print( 'quiz review' );
 	}
 
@@ -91,28 +106,17 @@ class FW_Extension_Learning_Grading extends FW_Extension {
 		$user_id = ( int ) FW_Request::GET( 'user-id' );
 		$page    = FW_Request::GET( 'sub-page' );
 
-		if ( $this->quiz->is_quiz( $quiz_id ) ) {
-			$quiz = get_post( $quiz_id );
-
+		if ( ! empty( $page ) ) {
 			switch ( $page ) {
 				case 'users' :
 					$this->_quiz_users( $quiz_id );
 					break;
 				case 'review' :
-					$user = new FW_Learning_Student( $user_id );
-
-					if (
-						! $user->id()
-						|| ( $user->is_studying( $quiz->post_parent ) && $user->has_passed( $quiz->post_parent ) )
-					) {
-						$this->_quiz_users( $quiz_id );
-						break;
-					}
-
 					$this->_quiz_review( $quiz_id, $user_id );
 					break;
 				default :
 					$this->_quiz_listing();
+					exit;
 			}
 		} else {
 			$this->_quiz_listing();
@@ -180,7 +184,8 @@ class FW_Extension_Learning_Grading extends FW_Extension {
 	 * @internal
 	 */
 	public function _action_admin_add_admin_menu() {
-		add_menu_page(
+
+		$screen_hook = add_menu_page(
 			__( 'Instructor', 'fw' ),
 			__( 'Instructor', 'fw' ),
 			'publish_posts',
@@ -189,6 +194,44 @@ class FW_Extension_Learning_Grading extends FW_Extension {
 			'dashicons-businessman',
 			8
 		);
+
+		$this->admin_page_url = menu_page_url( 'learning-grading', false );
+
+		if ( strpos( $screen_hook, $this->get_name() . '-quiz-listing' ) ) {
+			add_action( 'load-' . $screen_hook, array( $this, '_action_admin_add_quiz_listing_screen_options' ) );
+		} elseif ( strpos( $screen_hook, $this->get_name() . '-quiz-users' ) ) {
+			add_action( 'load-' . $screen_hook, array( $this, '_action_admin_add_users_listing_screen_options' ) );
+		}
+	}
+
+	/**
+	 * @internal
+	 */
+	public function _action_admin_add_quiz_listing_screen_options() {
+		$option = 'per_page';
+
+		$args = array(
+			'label'   => __( 'Quiz forms', 'fw' ),
+			'default' => 20,
+			'option'  => $this->get_name() . '_quiz_per_page'
+		);
+
+		add_screen_option( $option, $args );
+	}
+
+	/**
+	 * @internal
+	 */
+	public function _action_admin_add_users_listing_screen_options() {
+		$option = 'per_page';
+
+		$args = array(
+			'label'   => __( 'Quiz Users', 'fw' ),
+			'default' => 20,
+			'option'  => $this->get_name() . '_users_per_page'
+		);
+
+		add_screen_option( $option, $args );
 	}
 
 	/**
@@ -211,6 +254,8 @@ class FW_Extension_Learning_Grading extends FW_Extension {
 				$return['status'] = 'failed';
 			}
 		}
+
+		$return['time'] = date( 'Y-m-d H:i:s' );
 
 		$lesson = get_post( $id )->post_parent;
 
@@ -269,7 +314,7 @@ class FW_Extension_Learning_Grading extends FW_Extension {
 	}
 
 	private function admin_filters() {
-		add_action( 'fw_ext_learning_quiz_settings', array( $this, '_action_filter_set_quiz_options' ) );
+		add_filter( 'fw_ext_learning_quiz_settings', array( $this, '_action_filter_set_quiz_options' ) );
 	}
 
 	private function theme_actions() {

@@ -4,50 +4,50 @@
 
 class FW_Learning_Grading_Quiz_WP_List_Table extends FW_WP_List_Table {
 
+	private $items_per_page = 20;
+	private $total_items = null;
+
 	/**
 	 * Prepare the items for the table to process
 	 *
 	 * @return Void
 	 */
 	public function prepare_items() {
-		$columns  = $this->get_columns();
-		$hidden   = $this->get_hidden_columns();
-		$sortable = $this->get_sortable_columns();
+		$this->items_count();
+		$this->items_per_page = ( ( int ) $this->_args['number'] > 0 ) ? (int) $this->_args['number'] : $this->items_per_page;
+		$columns              = $this->get_columns();
+		$hidden               = $this->get_hidden_columns();
+		$sortable             = $this->get_sortable_columns();
 
-		$data = $this->table_data();
-		usort( $data, array( &$this, 'sort_data' ) );
+		$this->set_pagination_args( array(
+			'total_items' => $this->total_items,
+			'per_page'    => $this->items_per_page
+		) );
+
+		$args = array();
+
+		$args = array_merge( $args, $this->sort_data() );
+
+		$data = $this->table_data( $args );
 
 		$this->_column_headers = array( $columns, $hidden, $sortable );
 		$this->items           = $data;
 	}
 
-	/**
-	 * Allows you to sort the data by the variables set in the $_GET
-	 *
-	 * @return Mixed
-	 */
-	private function sort_data( $a, $b ) {
-		// Set defaults
-		$orderby = 'title';
-		$order   = 'asc';
 
-		// If orderby is set, use this as the sort column
-		if ( ! empty( $_GET['orderby'] ) ) {
-			$orderby = $_GET['orderby'];
+	private function sort_data() {
+
+		$return = array();
+
+		if ( FW_Request::GET( 'orderby' ) ) {
+			$return['orderby'] = FW_Request::GET( 'orderby' );
 		}
 
-		// If order is set use this as the order
-		if ( ! empty( $_GET['order'] ) ) {
-			$order = $_GET['order'];
+		if ( FW_Request::GET( 'order' ) ) {
+			$return['order'] = FW_Request::GET( 'order' );
 		}
 
-		$result = strnatcmp( $a[ $orderby ], $b[ $orderby ] );
-
-		if ( $order === 'asc' ) {
-			return $result;
-		}
-
-		return - $result;
+		return $return;
 	}
 
 	/**
@@ -72,8 +72,8 @@ class FW_Learning_Grading_Quiz_WP_List_Table extends FW_WP_List_Table {
 
 	public function get_columns() {
 		$columns = array(
-			'title'  => __( 'Title', 'fw' ),
-			'course' => __( 'Course', 'fw' ),
+			'title'      => __( 'Title', 'fw' ),
+			'course'     => __( 'Course', 'fw' ),
 			'in-pending' => __( 'Pending', 'fw' ),
 		);
 
@@ -92,30 +92,36 @@ class FW_Learning_Grading_Quiz_WP_List_Table extends FW_WP_List_Table {
 		return $item['id'];
 	}
 
-	private function table_data() {
-		$data   = array();
-		$offset = 0;
-		$quizes = get_posts( array(
-			'post_type'      => fw_ext( 'learning-quiz' )->get_quiz_post_type(),
-			'posts_per_page' => 10, //FIXME: Add the dynamic posts count
-			'offset'         => $offset, //FIXME: Review pagination
-		) );
+	private function table_data( array $args = array() ) {
+		$data = array();
 
-		foreach ( $quizes as $quiz ) {
+		$default = array(
+			'post_type'      => fw_ext( 'learning-quiz' )->get_quiz_post_type(),
+			'posts_per_page' => $this->items_per_page,
+			'offset'         => $this->get_pagenum() - 1,
+			'author'         => get_current_user_id()
+		);
+
+		$args = array_merge( $args, $default );
+
+		$quizes = new WP_Query( $args );
+
+		foreach ( $quizes->get_posts() as $quiz ) {
 			$title = $quiz->post_title;
-			$query = new WP_User_Query(array(
+			$query = new WP_User_Query( array(
 				'meta_query' => array(
 					0 => array(
-						'key'     =>  'learning-grading-quiz-status-' . $quiz->ID,
-						'value'   => 'pending',
+						'key'   => 'learning-grading-quiz-status-' . $quiz->ID,
+						'value' => 'pending',
 					),
 				)
-			));
+			) );
 
 			$count = $query->get_total();
 
 			if ( $count ) {
-				$title = '<a href="' . menu_page_url( 'learning-grading', false ) . '&sub-page=users&quiz-id=' . $quiz->ID . '">' . $quiz->post_title . '</a>';
+				$title = '<strong><a class="row-title" href="' . menu_page_url( 'learning-grading',
+						false ) . '&sub-page=users&quiz-id=' . $quiz->ID . '">' . $quiz->post_title . '</a></strong>';
 			}
 
 			$course       = get_post( get_post( $quiz->post_parent )->post_parent );
@@ -126,13 +132,19 @@ class FW_Learning_Grading_Quiz_WP_List_Table extends FW_WP_List_Table {
 				: '';
 
 			$data[] = array(
-				'title'  => $title,
-				'course' => $course_title,
+				'title'      => $title,
+				'course'     => $course_title,
 				'in-pending' => $count,
 			);
 		}
 
-
 		return $data;
+	}
+
+	private function items_count() {
+		if ( is_null( $this->total_items ) ) {
+			$count             = wp_count_posts( fw_ext( 'learning-quiz' )->get_quiz_post_type(), 'publish' );
+			$this->total_items = $count->publish + $count->private;
+		}
 	}
 }
