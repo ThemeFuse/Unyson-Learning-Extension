@@ -26,7 +26,7 @@ function _filter_ext_learning_quiz_the_content( $the_content ) {
 	$quiz = fw()->extensions->get( 'learning-quiz' );
 	global $post;
 
-	if ( ! $quiz->is_quiz( $post->ID ) ) {
+	if ( ! $quiz->has_quiz( $post->ID ) ) {
 		return $the_content;
 	}
 
@@ -47,7 +47,7 @@ function _filter_ext_learning_quiz_add_start_button( $template ) {
 	 */
 	$quiz = fw()->extensions->get( 'learning-quiz' );
 
-	if ( is_singular( $quiz->get_quiz_post_type() ) ) {
+	if ( $quiz->is_quiz_page() ) {
 		if ( $quiz->locate_view_path( 'single' ) ) {
 			return $quiz->locate_view_path( 'single' );
 		}

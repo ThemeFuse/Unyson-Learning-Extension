@@ -88,12 +88,11 @@ class FW_Extension_Learning_Grading extends FW_Extension {
 
 	private function _quiz_review( $quiz_id, $user_id ) {
 		$user = new FW_Learning_Student( $user_id );
-		$quiz = get_post( $quiz_id );
 
 		if (
 			! $user->id()
-			|| ! $this->quiz->is_quiz( $quiz_id )
-			|| ( $user->is_studying( $quiz->post_parent ) && $user->has_passed( $quiz->post_parent ) )
+			|| ! $this->quiz->has_quiz( $quiz_id )
+			|| ( $user->is_studying( $quiz_id ) && $user->has_passed( $quiz_id ) )
 		) {
 
 		}
@@ -163,7 +162,7 @@ class FW_Extension_Learning_Grading extends FW_Extension {
 			return;
 		}
 
-		$quiz = $this->quiz->get_lesson_quiz( $post_id );
+		$quiz = get_post( $post_id );
 
 		if ( empty( $quiz ) ) {
 			return;
@@ -206,42 +205,12 @@ class FW_Extension_Learning_Grading extends FW_Extension {
 
 	/**
 	 * @internal
-	 */
-	public function _action_admin_add_quiz_listing_screen_options() {
-		$option = 'per_page';
-
-		$args = array(
-			'label'   => __( 'Quiz forms', 'fw' ),
-			'default' => 20,
-			'option'  => $this->get_name() . '_quiz_per_page'
-		);
-
-		add_screen_option( $option, $args );
-	}
-
-	/**
-	 * @internal
-	 */
-	public function _action_admin_add_users_listing_screen_options() {
-		$option = 'per_page';
-
-		$args = array(
-			'label'   => __( 'Quiz Users', 'fw' ),
-			'default' => 20,
-			'option'  => $this->get_name() . '_users_per_page'
-		);
-
-		add_screen_option( $option, $args );
-	}
-
-	/**
-	 * @internal
 	 *
 	 * @param array $return
 	 * @param int $id
 	 */
 	public function _action_theme_process_quiz( $return, $id ) {
-		if ( ! $this->quiz->is_quiz( $id ) ) {
+		if ( ! $this->quiz->has_quiz( $id ) ) {
 			return;
 		}
 
@@ -275,7 +244,7 @@ class FW_Extension_Learning_Grading extends FW_Extension {
 	 * @return bool
 	 */
 	public function requires_instructor( $id ) {
-		if ( empty( $id ) || ! $this->quiz->is_quiz( $id ) ) {
+		if ( empty( $id ) || ! $this->quiz->has_quiz( $id ) ) {
 			return false;
 		}
 

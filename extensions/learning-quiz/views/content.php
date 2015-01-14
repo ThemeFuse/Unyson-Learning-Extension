@@ -67,5 +67,5 @@ if ( $post->post_parent == 0 ) {
 ?>
 <hr/>
 <h4><?php _e( 'Back to', 'fw' ); ?>:
-	<a href="<?php echo get_permalink( $post->post_parent ) ?>"><?php echo get_the_title( $post->post_parent ) ?></a>
+	<a href="<?php echo get_permalink() ?>"><?php the_title() ?></a>
 </h4>

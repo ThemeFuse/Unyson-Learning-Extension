@@ -16,7 +16,7 @@ $manifest['requirements'] = array(
 	'framework'  => array(),
 	'extensions' => array(
 		'learning-student' => array(),
-		'learning-quiz' => array(),
+		'learning-quiz'    => array(),
 	)
 );
 

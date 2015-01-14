@@ -61,7 +61,7 @@ function _action_fw_ext_learning_student_manage_user_location() {
 		$course = $learning->get_lesson_course( $post->ID );
 
 		if ( ! empty( $course ) && ! $student->is_subscribed( $course->ID ) ) {
-			wp_redirect( get_permalink($course->ID  ) );
+			wp_redirect( get_permalink( $course->ID ) );
 			exit;
 		}
 
@@ -70,9 +70,9 @@ function _action_fw_ext_learning_student_manage_user_location() {
 			exit;
 		}
 
-	} elseif ( !empty( $quiz ) && is_singular( $quiz->get_quiz_post_type() ) ) {
-		if ( ! $student->is_studying( $post->post_parent ) && ! $student->is_author( $post->post_parent ) ) {
-			wp_redirect( get_permalink( $post->post_parent ) );
+	} elseif ( ! empty( $quiz ) && $quiz->is_quiz_page() ) {
+		if ( ! $student->is_studying( $post->ID ) && ! $student->is_author( $post->ID ) ) {
+			wp_redirect( get_permalink( $post->ID ) );
 		}
 	}
 }

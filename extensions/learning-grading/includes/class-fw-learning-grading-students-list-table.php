@@ -106,7 +106,7 @@ class FW_Learning_Grading_Students_WP_List_Table extends FW_WP_List_Table {
 	private function table_data() {
 		$data    = array();
 
-		if ( ! fw_ext( 'learning-quiz' )->is_quiz( $this->quiz_id ) ) {
+		if ( ! fw_ext( 'learning-quiz' )->has_quiz( $this->quiz_id ) ) {
 			return $data;
 		}
 
@@ -141,7 +141,7 @@ class FW_Learning_Grading_Students_WP_List_Table extends FW_WP_List_Table {
 			        . '</a></strong>';
 
 			$student = new FW_Learning_Student( $user->ID );
-			$meta    = $student->get_lessons_data( $quiz->post_parent );
+			$meta    = $student->get_lessons_data( $quiz->ID );
 
 			$data[] = array(
 				'title'  => $name,

@@ -96,7 +96,6 @@ class FW_Learning_Grading_Quiz_WP_List_Table extends FW_WP_List_Table {
 		$data = array();
 
 		$default = array(
-			'post_type'      => fw_ext( 'learning-quiz' )->get_quiz_post_type(),
 			'posts_per_page' => $this->items_per_page,
 			'offset'         => $this->get_pagenum() - 1,
 			'author'         => get_current_user_id()
@@ -104,9 +103,9 @@ class FW_Learning_Grading_Quiz_WP_List_Table extends FW_WP_List_Table {
 
 		$args = array_merge( $args, $default );
 
-		$quizes = new WP_Query( $args );
+		$quizes = fw_ext('learning-quiz')->get_lessons_with_quiz( $args, false );
 
-		foreach ( $quizes->get_posts() as $quiz ) {
+		foreach ( $quizes as $quiz ) {
 			$title = $quiz->post_title;
 			$query = new WP_User_Query( array(
 				'meta_query' => array(
@@ -124,7 +123,7 @@ class FW_Learning_Grading_Quiz_WP_List_Table extends FW_WP_List_Table {
 						false ) . '&sub-page=users&quiz-id=' . $quiz->ID . '">' . $quiz->post_title . '</a></strong>';
 			}
 
-			$course       = get_post( get_post( $quiz->post_parent )->post_parent );
+			$course       = fw_ext('learning')->get_lesson_course( $quiz->ID );
 			$course_title = ( $course instanceof WP_Post ) ? $course->post_title : '';
 			$course_link  = ( $course instanceof WP_Post ) ? get_permalink( $course->ID ) : '';
 			$course_title = ( ! empty( $course_link ) )
@@ -143,7 +142,7 @@ class FW_Learning_Grading_Quiz_WP_List_Table extends FW_WP_List_Table {
 
 	private function items_count() {
 		if ( is_null( $this->total_items ) ) {
-			$count             = wp_count_posts( fw_ext( 'learning-quiz' )->get_quiz_post_type(), 'publish' );
+			$count             = wp_count_posts( fw_ext( 'learning' )->get_lesson_post_type() );
 			$this->total_items = $count->publish + $count->private;
 		}
 	}

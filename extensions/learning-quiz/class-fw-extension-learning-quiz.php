@@ -7,17 +7,12 @@ class FW_Extension_Learning_Quiz extends FW_Extension {
 	/**
 	 * @var FW_Extension_Learning
 	 */
-	private $parent = null;
+	private $learning = null;
 
 	/**
 	 * @var string
 	 */
-	private $quiz_post = 'fw-learning-quiz';
-
-	/**
-	 * @var string
-	 */
-	private $quiz_post_slug = 'quiz';
+	private $quiz_slug = 'quiz';
 
 	/**
 	 * @var FW_Learning_Quiz_Pass_Lesson
@@ -33,56 +28,16 @@ class FW_Extension_Learning_Quiz extends FW_Extension {
 	 * @internal
 	 */
 	public function _init() {
-		$this->parent      = $this->get_parent();
+		$this->learning    = $this->get_parent();
 		$this->pass_method = new FW_Learning_Quiz_Pass_Lesson();
-
-		$this->add_actions();
 
 		if ( is_admin() ) {
 			$this->admin_actions();
 			$this->admin_filters();
 		} else {
 			$this->theme_actions();
+			$this->theme_filters();
 		}
-	}
-
-	/**
-	 * @internal
-	 */
-	public function _action_register_custom_post() {
-		register_post_type( $this->quiz_post, array(
-				'labels'             => array(
-					'name'               => 'Quizzes',
-					'singular_name'      => 'Quiz',
-					'add_new'            => __( 'Add New', 'fw' ),
-					'add_new_item'       => __( 'Add New', 'fw' ),
-					'edit'               => sprintf( __( 'Edit %s', 'fw' ), 'Quiz' ),
-					'edit_item'          => sprintf( __( 'Edit %s', 'fw' ), 'Quiz' ),
-					'new_item'           => sprintf( __( 'New %s', 'fw' ), 'Quiz' ),
-					'all_items'          => sprintf( __( 'All %s', 'fw' ), 'Quiz' ),
-					'view'               => sprintf( __( 'View %s', 'fw' ), 'Quiz' ),
-					'view_item'          => sprintf( __( 'View %s', 'fw' ), 'Quiz' ),
-					'search_items'       => sprintf( __( 'Search %s', 'fw' ), 'Quiz' ),
-					'not_found'          => sprintf( __( 'No %s Found', 'fw' ), 'Quiz' ),
-					'not_found_in_trash' => sprintf( __( 'No %s Found In Trash', 'fw' ), 'Quiz' )
-				),
-				'description'        => '',
-				'public'             => false,
-				'show_ui'            => false,
-				'show_in_admin_bar'  => false,
-				'show_in_menu'       => false,
-				'publicly_queryable' => true,
-				'has_archive'        => false,
-				'rewrite'            => array(
-					'slug' => $this->quiz_post_slug
-				),
-				'show_in_nav_menus'  => false,
-				'hierarchical'       => false,
-				'supports'           => array(
-					'title',
-				)
-			)
-		);
 	}
 
 	/**
@@ -92,144 +47,20 @@ class FW_Extension_Learning_Quiz extends FW_Extension {
 	 * @param WP_Post $post
 	 */
 	public function _action_admin_attach_quiz_to_lesson( $post_id, $post ) {
-		if ( $post->post_type != $this->parent->get_lesson_post_type() ) {
+		if ( $post->post_type != $this->learning->get_lesson_post_type() ) {
 			return;
 		}
 
 		$questions = fw_get_db_post_option( $post_id, $this->get_name() . '-questions' );
-		$passmark  = fw_get_db_post_option( $post_id, $this->get_name() . '-passmark' );
 
-		$quiz = get_posts( array(
-			'post_parent'    => $post_id,
-			'post_type'      => $this->quiz_post,
-			'post_status'    => 'any',
-			'posts_per_page' => 1,
-		) );
+		$questions_array = json_decode( $questions['json'] );
+		if ( empty( $questions_array ) ) {
+			fw_update_post_meta( $post_id, $this->get_name() . '-has-quiz', false );
 
-		if ( empty( $quiz ) ) {
-
-			$questions_array = json_decode( $questions['json'] );
-			if ( empty( $questions_array ) ) {
-				return;
-			}
-
-			$quiz_post = array(
-				'post_name'     => $post->post_name . '-quiz',
-				'post_title'    => $post->post_title . ' ' . __( 'Quiz', 'fw' ),
-				'post_status'   => $post->post_status,
-				'post_type'     => $this->quiz_post,
-				'post_parent'   => $post_id,
-				'post_password' => $post->post_password,
-			);
-
-			$id = wp_insert_post( $quiz_post );
-
-			if ( is_wp_error( $id ) ) {
-				return;
-			}
-
-			fw_set_db_post_option( $id, $this->get_name() . '-questions', $questions );
-			fw_set_db_post_option( $id, $this->get_name() . '-passmark', $passmark );
-		} else {
-			$id = $quiz[0]->ID;
-
-			$questions_array = json_decode( $questions['json'] );
-			if ( empty( $questions_array ) ) {
-				wp_delete_post( $id, true );
-
-				return;
-			}
-
-			wp_update_post( array(
-				'ID'         => $id,
-				'post_title' => $post->post_title . ' ' . __( 'Quiz', 'fw' ),
-			) );
-
-			fw_set_db_post_option( $id, $this->get_name() . '-questions', $questions );
-			fw_set_db_post_option( $id, $this->get_name() . '-passmark', $passmark );
-		}
-	}
-
-	/**
-	 * @internal
-	 *
-	 * @param $post_id
-	 */
-	public function _action_admin_remove_lesson_quiz( $post_id ) {
-		if ( ! $this->parent->is_lesson( $post_id ) ) {
 			return;
 		}
 
-		$quiz = get_posts( array(
-			'post_parent'    => $post_id,
-			'post_type'      => $this->quiz_post,
-			'posts_per_page' => 1,
-			'post_status'    => 'any',
-		) );
-
-		if ( empty( $quiz ) ) {
-			return;
-		}
-
-		wp_delete_post( $quiz[0]->ID, true );
-	}
-
-	/**
-	 * @internal
-	 *
-	 * @param string $new_status
-	 * @param string $old_status
-	 * @param WP_Post $post
-	 */
-	public function _action_admin_lesson_change_status( $new_status, $old_status, $post ) {
-		if ( ! $this->parent->is_lesson( $post->ID ) ) {
-			return;
-		}
-
-		$quiz = get_posts( array(
-			'post_parent'    => $post->ID,
-			'post_type'      => $this->quiz_post,
-			'posts_per_page' => 1,
-			'post_status'    => $old_status,
-		) );
-
-		if ( empty( $quiz ) ) {
-			return;
-		}
-
-		wp_update_post( array(
-			'ID'          => $quiz[0]->ID,
-			'post_status' => $new_status
-		) );
-	}
-
-	/**
-	 * @internal
-	 *
-	 * @param $post_id
-	 */
-	public function _action_admin_untrash_lesson_quiz( $post_id ) {
-		if ( ! $this->parent->is_lesson( $post_id ) ) {
-			return;
-		}
-
-		$post = get_post( $post_id );
-
-		$quiz = get_posts( array(
-			'post_parent'    => $post_id,
-			'post_type'      => $this->quiz_post,
-			'posts_per_page' => 1,
-			'post_status'    => 'trash',
-		) );
-
-		if ( empty( $quiz ) ) {
-			return;
-		}
-
-		wp_update_post( array(
-			'ID'          => $quiz[0]->ID,
-			'post_status' => $post->post_status
-		) );
+		fw_update_post_meta( $post_id, $this->get_name() . '-has-quiz', 1 );
 	}
 
 	/**
@@ -250,7 +81,7 @@ class FW_Extension_Learning_Quiz extends FW_Extension {
 	 * @return array
 	 */
 	public function _filter_admin_lessons_quiz_option( $options, $post_type ) {
-		if ( $post_type != $this->parent->get_lesson_post_type() ) {
+		if ( $post_type != $this->learning->get_lesson_post_type() ) {
 			return $options;
 		}
 
@@ -288,8 +119,8 @@ class FW_Extension_Learning_Quiz extends FW_Extension {
 							'type'  => 'text',
 							'desc'  => __( 'The percentage at which the test will be passed.', 'fw' ),
 						),
-						'external-options' => array(
-							'type' => 'group',
+						'external-options'              => array(
+							'type'    => 'group',
 							'options' => $external_options
 						)
 					)
@@ -322,7 +153,7 @@ class FW_Extension_Learning_Quiz extends FW_Extension {
 			return;
 		}
 
-		if ( ! $this->parent->is_lesson( $post->ID ) ) {
+		if ( ! $this->learning->is_lesson( $post->ID ) ) {
 			return;
 		}
 
@@ -337,9 +168,8 @@ class FW_Extension_Learning_Quiz extends FW_Extension {
 	 * @internal
 	 */
 	public function _action_theme_define_form() {
-		global $post;
 
-		if ( ! empty( $post ) && $this->is_quiz( $post->ID ) ) {
+		if ( $this->is_quiz_page() ) {
 			$this->register_form();
 		}
 
@@ -349,16 +179,29 @@ class FW_Extension_Learning_Quiz extends FW_Extension {
 			return;
 		}
 
-		if ( empty( $post ) || ! $this->is_quiz() ) {
+		if ( ! $this->is_quiz_page() ) {
 			FW_Session::del( $this->get_name() . '-form-id' );
 		}
 	}
 
 	/**
-	 * @return string
+	 * @internal
 	 */
-	public function get_quiz_post_type() {
-		return $this->quiz_post;
+	public function _action_theme_add_rewrite_rules() {
+		add_rewrite_rule(
+			$this->learning->get_lessons_slug() . '/([^/]*)/(' . $this->quiz_slug . ')',
+			'index.php?' . $this->learning->get_lesson_post_type() . '=$matches[1]&quiz=$matches[2]',
+			'top'
+		);
+		flush_rewrite_rules();
+	}
+
+	/**
+	 * @internal
+	 */
+	public function _action_theme_add_rewrite_tags() {
+		add_rewrite_tag( '%' . $this->learning->get_lesson_post_type() . '%', '([^&]+)' );
+		add_rewrite_tag( '%quiz%', '(*{1,})' );
 	}
 
 	/**
@@ -369,7 +212,7 @@ class FW_Extension_Learning_Quiz extends FW_Extension {
 	 * @return string
 	 */
 	public function render_quiz( $post_id ) {
-		if ( ! $this->is_quiz( $post_id ) ) {
+		if ( ! $this->has_quiz( $post_id ) ) {
 			return '';
 		}
 
@@ -400,28 +243,18 @@ class FW_Extension_Learning_Quiz extends FW_Extension {
 	}
 
 	/**
-	 * Return the quiz post of the lesson
+	 * Return the lesson post if it has a quiz
+	 *
+	 * @deprecated
 	 *
 	 * @param $lesson_id
 	 *
 	 * @return null|WP_Post
 	 */
 	public function get_lesson_quiz( $lesson_id ) {
-		if ( ! $this->parent->is_lesson( $lesson_id ) ) {
+		if ( ! $this->learning->is_lesson( $lesson_id ) ) {
 			return null;
 		}
-
-		$quiz = get_posts( array(
-			'post_type'      => $this->quiz_post,
-			'post_parent'    => $lesson_id,
-			'posts_per_page' => 1,
-		) );
-
-		if ( empty( $quiz ) ) {
-			return null;
-		}
-
-		$quiz = $quiz[0];
 
 		$quiz_items = fw_get_db_post_option( $lesson_id, $this->get_name() . '-questions' );
 
@@ -435,27 +268,67 @@ class FW_Extension_Learning_Quiz extends FW_Extension {
 			return null;
 		}
 
-		/**
-		 * @var FW_Option_Type_Quiz_Builder[] $quiz_builder_items
-		 */
-		$quiz_builder_items = fw()->backend->option_type( 'quiz-builder' )->get_items();
-
-		foreach ( $quiz_items as $key => $item ) {
-			if (
-				! isset( $item['type'] ) ||
-			    ! isset( $quiz_builder_items[ $item['type'] ] ) ||
-				! $quiz_builder_items[ $item['type'] ]->validate_item( $item['options'] )
-			) {
-				unset($quiz_items[$key]);
-				continue;
-			}
-		}
-
-		if ( empty( $quiz_items ) ) {
+		if ( ! $this->validate_quiz_items( $quiz_items ) ) {
 			return null;
 		}
 
-		return $quiz;
+		return get_post( $lesson_id );
+	}
+
+	/**
+	 * Return lesson quiz permalink
+	 *
+	 * @param $id
+	 *
+	 * @return string
+	 */
+	public function get_permalink( $id = null ) {
+
+		if ( empty( $id ) ) {
+			global $post;
+			if ( ! $post instanceof WP_Post ) {
+				return '';
+			}
+
+			$id = $post->ID;
+		}
+
+		if ( ! $this->has_quiz( $id ) ) {
+			return '';
+		}
+
+		if ( get_option( 'permalink_structure' ) ) {
+			return get_permalink( $id ) . '/' . $this->quiz_slug;
+		}
+
+		return get_permalink( $id ) . '&quiz=' . $this->quiz_slug;
+	}
+
+	/**
+	 * Return lesson posts that have quiz
+	 *
+	 * @param array $args
+	 * @param bool $all
+	 *
+	 * @return WP_Post[]
+	 */
+	public function get_lessons_with_quiz( array $args, $all = true ) {
+		$args['post_type']    = $this->learning->get_lesson_post_type();
+		$args['meta_query'][] = array(
+			'key'   => $this->get_name() . '-has-quiz',
+			'value' => 1,
+			'type'  => 'NUMERIC'
+		);
+
+		if ( $all ) {
+			$args['posts_per_page'] = - 1;
+		}
+
+		fw_print( $args );
+
+		$query = new WP_Query( $args );
+
+		return $query->get_posts();
 	}
 
 	/**
@@ -466,36 +339,35 @@ class FW_Extension_Learning_Quiz extends FW_Extension {
 	 * @return bool
 	 */
 	public function has_quiz( $lesson_id ) {
-		if ( ! $this->get_lesson_quiz( $lesson_id ) ) {
-
-			return false;
-		}
-
-		return true;
+		return $this->validate_quiz( $lesson_id );
 	}
 
 	/**
-	 * @param int $post_id
+	 * @deprecated
+	 *
+	 * @param int $id
 	 *
 	 * @return bool
 	 */
-	public function is_quiz( $post_id = null ) {
+	public function is_quiz( $id = null ) {
+		return $this->has_quiz( $id );
+	}
 
-		if ( $post_id === 0 ) {
-			return false;
-		}
+	/**
+	 * Detects if you are on quiz page
+	 *
+	 * @return bool
+	 */
+	public function is_quiz_page() {
+		global $post;
 
-		if ( $post_id === null ) {
-			global $post;
-		} else {
-			$post = get_post( (int) $post_id );
-		}
-
-		if ( empty( $post ) ) {
-			return false;
-		}
-
-		if ( $post->post_type != $this->quiz_post ) {
+		if ( is_admin()
+		     || did_action( 'wp' ) == 0
+		     || ! $post instanceof WP_Post
+		     || ! $this->learning->is_lesson( $post->ID )
+		     || ! $this->has_quiz( $post->ID )
+		     || get_query_var( 'quiz' ) != $this->quiz_slug
+		) {
 			return false;
 		}
 
@@ -547,7 +419,7 @@ class FW_Extension_Learning_Quiz extends FW_Extension {
 
 		$post_id = $_SESSION[ $this->get_name() . '-form-id' ];
 
-		if ( ! $this->is_quiz( $post_id ) ) {
+		if ( ! $this->has_quiz( $post_id ) ) {
 			unset( $_SESSION[ $this->get_name() . '-form-id' ] );
 			$errors['invalid-quiz'] = __( 'Invalid Quiz', 'fw' );
 
@@ -628,18 +500,14 @@ class FW_Extension_Learning_Quiz extends FW_Extension {
 		exit;
 	}
 
-	private function add_actions() {
-		add_action( 'init', array( $this, '_action_register_custom_post' ) );
-	}
-
 	private function admin_actions() {
 		add_action( 'fw_save_post_options', array( $this, '_action_admin_attach_quiz_to_lesson' ), 9, 2 );
-		add_action( 'before_delete_post', array( $this, '_action_admin_remove_lesson_quiz' ), 9, 1 );
-		add_action( 'transition_post_status', array( $this, '_action_admin_lesson_change_status' ), 9, 3 );
 		add_action( 'admin_enqueue_scripts', array( $this, '_action_admin_add_static' ), 10 );
 	}
 
 	private function theme_actions() {
+		add_action( 'init', array( $this, '_action_theme_add_rewrite_rules' ), 9998 );
+		add_action( 'init', array( $this, '_action_theme_add_rewrite_tags' ), 9998 );
 		add_action( 'wp', array( $this, '_action_theme_define_pass_method' ) );
 		add_action( 'wp', array( $this, '_action_theme_define_form' ) );
 	}
@@ -648,11 +516,59 @@ class FW_Extension_Learning_Quiz extends FW_Extension {
 		add_filter( 'fw_post_options', array( $this, '_filter_admin_lessons_quiz_option' ), 10, 2 );
 	}
 
+	private function theme_filters() {
+		//add_filter('query_vars', array( $this, '_filter_theme_add_query_var'));
+	}
+
 	private function register_form() {
 		$this->form = new FW_Form( $this->get_name() . '-quiz-form', array(
 			'render'   => array( $this, '_form_render' ),
 			'validate' => array( $this, '_form_validate' ),
 			'save'     => array( $this, '_form_save' ),
 		) );
+	}
+
+	private function validate_quiz( $lesson_id ) {
+		if ( ! $this->learning->is_lesson( $lesson_id ) ) {
+			return false;
+		}
+
+		$quiz_items = fw_get_db_post_option( $lesson_id, $this->get_name() . '-questions' );
+
+		if ( empty( $quiz_items['json'] ) ) {
+			return null;
+		}
+
+		$quiz_items = json_decode( $quiz_items['json'], ARRAY_A );
+
+		if ( empty( $quiz_items ) ) {
+			return null;
+		}
+
+		return $this->validate_quiz_items( $quiz_items );
+	}
+
+	private function validate_quiz_items( array $quiz_items ) {
+		/**
+		 * @var FW_Option_Type_Quiz_Builder[] $quiz_builder_items
+		 */
+		$quiz_builder_items = fw()->backend->option_type( 'quiz-builder' )->get_items();
+
+		foreach ( $quiz_items as $key => $item ) {
+			if (
+				! isset( $item['type'] ) ||
+				! isset( $quiz_builder_items[ $item['type'] ] ) ||
+				! $quiz_builder_items[ $item['type'] ]->validate_item( $item['options'] )
+			) {
+				unset( $quiz_items[ $key ] );
+				continue;
+			}
+		}
+
+		if ( empty( $quiz_items ) ) {
+			return false;
+		}
+
+		return true;
 	}
 }
