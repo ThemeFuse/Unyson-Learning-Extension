@@ -154,6 +154,7 @@ class FW_Option_Type_Quiz_Builder_Item_Single_Choice extends FW_Option_Type_Quiz
 		$response->set_correct_answer( $item['options']['correct-answer'] );
 		$response->set_current_answer( $input_value );
 		$response->set_max_percentage( (float) $item['options']['points'] );
+		$response->set_item( $item );
 
 		if ( $current === $correct ) {
 			$response->set_current_percentage( (float) $item['options']['points'] );
@@ -179,4 +180,4 @@ class FW_Option_Type_Quiz_Builder_Item_Single_Choice extends FW_Option_Type_Quiz
 	}
 }
 
-FW_Option_Type_Builder::register_item_type( 'FW_Option_Type_Quiz_Builder_Item_Single_Choice' );
+FW_Option_Type_Quiz_Builder::register_item( new FW_Option_Type_Quiz_Builder_Item_Single_Choice() );

@@ -47,6 +47,7 @@ class FW_Learning_Student {
 		if ( empty( $this->user_data ) ) {
 			return 0;
 		}
+
 		return $this->user_data->ID;
 	}
 
@@ -410,11 +411,38 @@ class FW_Learning_Student {
 	}
 
 	/**
+	 * @param int $id
+	 * @param FW_Learning_Grading_Quiz_Review $data
+	 *
+	 * @return bool
+	 */
+	public function add_quiz_data( $id, FW_Learning_Grading_Quiz_Review $data ) {
+		$learning_quiz = fw_ext( 'learning-quiz' );
+
+		if ( empty( $learning_quiz ) ) {
+			return false;
+		}
+
+		$lesson = $this->get_lessons_data( $id );
+
+		if ( empty( $lesson ) ) {
+			return false;
+		}
+
+		$lesson['quiz'] = $data;
+
+		return $this->add_lesson_data( $id, $lesson );
+	}
+
+	/**
 	 * Return all student meta
 	 *
 	 * @return array|null
 	 */
 	public function get_user_data() {
+		if ( empty( $this->user_data ) ) {
+			return null;
+		}
 		return fw_get_db_extension_user_data( $this->user_data->ID, $this->learning_student->get_name() );
 	}
 
@@ -510,6 +538,41 @@ class FW_Learning_Student {
 		}
 
 		return null;
+	}
+
+	/**
+	 * @param int $id
+	 *
+	 * @return null|FW_Learning_Grading_Quiz_Review
+	 */
+	public function get_quiz_data( $id ) {
+		$learning_quiz = fw_ext( 'learning-quiz' );
+
+		if ( empty( $learning_quiz ) || empty( $id ) || ! $this->learning->is_lesson( $id ) ) {
+			return null;
+		}
+
+		$data = $this->get_lessons_data( $id );
+
+		if ( empty( $data ) || empty( $data['quiz'] ) ) {
+			return null;
+		}
+
+		return $data['quiz'];
+	}
+
+	/**
+	 * @param int $id
+	 *
+	 * @return null|string
+	 */
+	public function get_quiz_status( $id ) {
+		$data = $this->get_quiz_data( $id );
+		if ( empty( $data ) ) {
+			return null;
+		}
+
+		return $data->get_status();
 	}
 
 	/**

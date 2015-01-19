@@ -152,6 +152,7 @@ class FW_Option_Type_Quiz_Builder_Item_Gap_Fill extends FW_Option_Type_Quiz_Buil
 		$response->set_correct_answer( $item['options']['correct-answer'] );
 		$response->set_current_answer( $input_value );
 		$response->set_max_percentage( (float) $item['options']['points'] );
+		$response->set_item( $item );
 
 		$item['options']['correct-answer'] = trim( $item['options']['correct-answer'] );
 		$item['options']['correct-answer'] = strtolower( $item['options']['correct-answer'] );
@@ -185,4 +186,4 @@ class FW_Option_Type_Quiz_Builder_Item_Gap_Fill extends FW_Option_Type_Quiz_Buil
 	}
 }
 
-FW_Option_Type_Builder::register_item_type( 'FW_Option_Type_Quiz_Builder_Item_Gap_Fill' );
+FW_Option_Type_Quiz_Builder::register_item( new FW_Option_Type_Quiz_Builder_Item_Gap_Fill() );

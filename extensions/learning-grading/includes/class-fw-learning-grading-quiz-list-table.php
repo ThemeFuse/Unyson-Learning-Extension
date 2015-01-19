@@ -24,16 +24,11 @@ class FW_Learning_Grading_Quiz_WP_List_Table extends FW_WP_List_Table {
 			'per_page'    => $this->items_per_page
 		) );
 
-		$args = array();
-
-		$args = array_merge( $args, $this->sort_data() );
-
-		$data = $this->table_data( $args );
+		$data = $this->table_data( $this->sort_data() );
 
 		$this->_column_headers = array( $columns, $hidden, $sortable );
 		$this->items           = $data;
 	}
-
 
 	private function sort_data() {
 
@@ -85,7 +80,7 @@ class FW_Learning_Grading_Quiz_WP_List_Table extends FW_WP_List_Table {
 	}
 
 	public function get_sortable_columns() {
-		return array( 'title' => array( 'title', true ) );
+		return array( 'title' => array( 'title', false ) );
 	}
 
 	public function column_id( $item ) {
@@ -103,7 +98,7 @@ class FW_Learning_Grading_Quiz_WP_List_Table extends FW_WP_List_Table {
 
 		$args = array_merge( $args, $default );
 
-		$quizes = fw_ext('learning-quiz')->get_lessons_with_quiz( $args, false );
+		$quizes = fw_ext( 'learning-quiz' )->get_lessons_with_quiz( $args, false );
 
 		foreach ( $quizes as $quiz ) {
 			$title = $quiz->post_title;
@@ -123,7 +118,7 @@ class FW_Learning_Grading_Quiz_WP_List_Table extends FW_WP_List_Table {
 						false ) . '&sub-page=users&quiz-id=' . $quiz->ID . '">' . $quiz->post_title . '</a></strong>';
 			}
 
-			$course       = fw_ext('learning')->get_lesson_course( $quiz->ID );
+			$course       = fw_ext( 'learning' )->get_lesson_course( $quiz->ID );
 			$course_title = ( $course instanceof WP_Post ) ? $course->post_title : '';
 			$course_link  = ( $course instanceof WP_Post ) ? get_permalink( $course->ID ) : '';
 			$course_title = ( ! empty( $course_link ) )
@@ -140,10 +135,18 @@ class FW_Learning_Grading_Quiz_WP_List_Table extends FW_WP_List_Table {
 		return $data;
 	}
 
-	private function items_count() {
-		if ( is_null( $this->total_items ) ) {
-			$count             = wp_count_posts( fw_ext( 'learning' )->get_lesson_post_type() );
-			$this->total_items = $count->publish + $count->private;
+	private function items_count( array $args = array() ) {
+
+		if ( ! is_null( $this->total_items ) ) {
+			return $this->total_items;
 		}
+
+		$default = array(
+			'author' => get_current_user_id()
+		);
+
+		$args = array_merge( $args, $default );
+
+		$this->total_items = count( fw_ext( 'learning-quiz' )->get_lessons_with_quiz( $args ) );
 	}
 }

@@ -141,14 +141,13 @@ class FW_Learning_Grading_Students_WP_List_Table extends FW_WP_List_Table {
 			        . '</a></strong>';
 
 			$student = new FW_Learning_Student( $user->ID );
-			$meta    = $student->get_lessons_data( $quiz->ID );
+			$meta    = $student->get_quiz_status( $quiz->ID );
 
 			$data[] = array(
 				'title'  => $name,
-				'status' => $meta['quiz']['status'],
+				'status' => $meta,
 			);
 		}
-
 
 		return $data;
 	}

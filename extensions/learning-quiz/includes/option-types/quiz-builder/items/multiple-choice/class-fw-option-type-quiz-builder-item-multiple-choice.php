@@ -152,6 +152,7 @@ class FW_Option_Type_Quiz_Builder_Item_Multiple_Choice extends FW_Option_Type_Qu
 		$response->set_correct_answer( $item['options']['correct-answers'] );
 		$response->set_current_answer( $input_value );
 		$response->set_max_percentage( (float) $item['options']['points'] );
+		$response->set_item( $item );
 
 		$percent_per_answer = $item['options']['points'] / count( $item['options']['correct-answers'] );
 
@@ -189,4 +190,4 @@ class FW_Option_Type_Quiz_Builder_Item_Multiple_Choice extends FW_Option_Type_Qu
 	}
 }
 
-FW_Option_Type_Builder::register_item_type( 'FW_Option_Type_Quiz_Builder_Item_Multiple_Choice' );
+FW_Option_Type_Quiz_Builder::register_item( new FW_Option_Type_Quiz_Builder_Item_Multiple_Choice() );

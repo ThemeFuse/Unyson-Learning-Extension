@@ -12,6 +12,11 @@ class FW_Option_Type_Quiz_Builder extends FW_Option_Type_Builder {
 	 */
 	private $parent;
 
+	/**
+	 * @var FW_Option_Type_Quiz_Builder_Item[]
+	 */
+	private static $items = array();
+
 	public function get_type() {
 		return 'quiz-builder';
 	}
@@ -269,6 +274,33 @@ class FW_Option_Type_Quiz_Builder extends FW_Option_Type_Builder {
 		return $this->get_item_types();
 	}
 
+	static public function get_quiz_item_types() {
+		return self::$items;
+	}
+
+	/**
+	 * @param string $item_type
+	 *
+	 * @return FW_Option_Type_Quiz_Builder_Item|null
+	 */
+	public static function get_item_type( $item_type ) {
+		if ( isset( self::$items[ $item_type ] ) ) {
+			return  self::$items[ $item_type ];
+		}
+
+		return null;
+	}
+
+
+
+	final static public function register_item( FW_Option_Type_Quiz_Builder_Item $item ) {
+		if ( ! isset( self::$items[$item->get_type()] ) ) {
+			self::$items[$item->get_type()] = $item;
+		}
+
+		FW_Option_Type_Builder::register_item_type( get_class( $item ) );
+	}
+
 	/**
 	 * Search relative path in '/extensions/learning-quiz/includes/options-types/{builder_type}/'
 	 *
@@ -326,6 +358,8 @@ class FW_Quiz_Question_Process_Response {
 	 * @var string
 	 */
 	private $comments = '';
+
+	private $item = null;
 
 	/**
 	 * @param string $question
@@ -423,6 +457,10 @@ class FW_Quiz_Question_Process_Response {
 		}
 	}
 
+	public function set_item( array $item ) {
+		$this->item = $item;
+	}
+
 	/**
 	 * @return string
 	 */
@@ -467,5 +505,9 @@ class FW_Quiz_Question_Process_Response {
 	 */
 	public function get_comments() {
 		return $this->comments;
+	}
+
+	public function get_item() {
+		return $this->item;
 	}
 }

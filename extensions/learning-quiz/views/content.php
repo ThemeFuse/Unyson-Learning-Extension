@@ -12,9 +12,8 @@ global $post;
  * @var WP_Query $wp_query
  */
 global $wp_query;
-$lesson   = get_post( $post->post_parent );
 $response = fw_ext_learning_quiz_get_response();
-$pass_mark = (int) fw_get_db_post_option( $lesson->ID, 'learning-quiz-passmark' );
+$pass_mark = (int) fw_get_db_post_option( $post->ID, 'learning-quiz-passmark' );
 $text      = '';
 
 if ( $pass_mark > 0 ) {
@@ -60,11 +59,6 @@ if ( ! empty( $response ) ) {
 	$learning_quiz = fw()->extensions->get( 'learning-quiz' );
 	echo $learning_quiz->render_quiz( $post->ID ); ?>
 <?php endif ?>
-<?php
-if ( $post->post_parent == 0 ) {
-	return;
-}
-?>
 <hr/>
 <h4><?php _e( 'Back to', 'fw' ); ?>:
 	<a href="<?php echo get_permalink() ?>"><?php the_title() ?></a>

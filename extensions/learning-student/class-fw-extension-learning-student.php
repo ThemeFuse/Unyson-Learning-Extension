@@ -315,6 +315,34 @@ class FW_Extension_Learning_Student extends FW_Extension {
 	}
 
 	/**
+	 * @param $id
+	 * @param FW_Learning_Grading_Quiz_Review $data
+	 *
+	 * @return bool
+	 */
+	public function add_quiz_data( $id, FW_Learning_Grading_Quiz_Review $data ) {
+		return $this->current_user->add_quiz_data( $id, $data );
+	}
+
+	/**
+	 * @param $id
+	 *
+	 * @return null|FW_Learning_Grading_Quiz_Review
+	 */
+	public function get_quiz_data( $id ) {
+		return $this->current_user->get_quiz_data( $id );
+	}
+
+	/**
+	 * @param $id
+	 *
+	 * @return null|string
+	 */
+	public function get_quiz_status( $id ) {
+		return $this->current_user->get_quiz_status( $id );
+	}
+
+	/**
 	 * @internal
 	 */
 	public function _action_define_current_user() {
@@ -461,9 +489,11 @@ class FW_Extension_Learning_Student extends FW_Extension {
 	 * @param int $lesson_id
 	 */
 	public function _action_theme_user_completed_lesson( $lesson_id ) {
+
 		if ( ! $this->learning->is_lesson( $lesson_id ) ) {
 			return;
 		}
+
 		$course = $this->learning->get_lesson_course( $lesson_id );
 
 		if ( empty( $course ) || ! $this->is_subscribed( $course->ID ) ) {

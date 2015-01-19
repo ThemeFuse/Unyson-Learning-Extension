@@ -324,8 +324,6 @@ class FW_Extension_Learning_Quiz extends FW_Extension {
 			$args['posts_per_page'] = - 1;
 		}
 
-		fw_print( $args );
-
 		$query = new WP_Query( $args );
 
 		return $query->get_posts();
@@ -407,20 +405,16 @@ class FW_Extension_Learning_Quiz extends FW_Extension {
 	 * @return array
 	 */
 	public function _form_validate( $errors ) {
-		if ( ! isset( $_SESSION ) ) {
-			session_start();
-		}
-
-		if ( ! isset( $_SESSION[ $this->get_name() . '-form-id' ] ) ) {
+		if ( is_null( FW_Session::get( $this->get_name() . '-form-id' ) ) ) {
 			$errors['invalid-quiz'] = __( 'Invalid Quiz', 'fw' );
 
 			return $errors;
 		}
 
-		$post_id = $_SESSION[ $this->get_name() . '-form-id' ];
+		$post_id = FW_Session::get( $this->get_name() . '-form-id' );
 
 		if ( ! $this->has_quiz( $post_id ) ) {
-			unset( $_SESSION[ $this->get_name() . '-form-id' ] );
+			FW_Session::del( $this->get_name() . '-form-id' );
 			$errors['invalid-quiz'] = __( 'Invalid Quiz', 'fw' );
 
 			return $errors;
@@ -428,14 +422,14 @@ class FW_Extension_Learning_Quiz extends FW_Extension {
 
 		$inputs = fw_get_db_post_option( $post_id, $this->get_name() . '-questions' );
 		if ( ! is_array( $inputs ) ) {
-			unset( $_SESSION[ $this->get_name() . '-form-id' ] );
+			FW_Session::del( $this->get_name() . '-form-id' );
 			$errors['invalid-quiz'] = __( 'Invalid Quiz', 'fw' );
 
 			return $errors;
 		}
 
 		if ( ! isset( $inputs['json'] ) ) {
-			unset( $_SESSION[ $this->get_name() . '-form-id' ] );
+			FW_Session::del( $this->get_name() . '-form-id' );
 			$errors['invalid-quiz'] = __( 'Invalid Quiz', 'fw' );
 
 			return $errors;
@@ -444,7 +438,7 @@ class FW_Extension_Learning_Quiz extends FW_Extension {
 		$inputs = json_decode( $inputs['json'], true );
 
 		if ( empty( $inputs ) ) {
-			unset( $_SESSION[ $this->get_name() . '-form-id' ] );
+			FW_Session::del( $this->get_name() . '-form-id' );
 			$errors['invalid-quiz'] = __( 'Invalid Quiz', 'fw' );
 
 			return $errors;
@@ -492,8 +486,7 @@ class FW_Extension_Learning_Quiz extends FW_Extension {
 		do_action( 'fw_ext_learning_quiz_form_process', $return, $post_id );
 
 		if ( $total >= $return['minimum-pass-mark'] ) {
-			$lesson = get_post( $post_id )->post_parent;
-			$this->pass_method->pass_lesson( $lesson );
+			$this->pass_method->pass_lesson( $post_id );
 		}
 
 		wp_redirect( fw_current_url() );

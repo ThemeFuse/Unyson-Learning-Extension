@@ -42,8 +42,6 @@ class FW_Extension_Learning_Grading extends FW_Extension {
 	 */
 	private $student = null;
 
-	private $admin_page_url = '';
-
 	/**
 	 * @internal
 	 */
@@ -62,93 +60,21 @@ class FW_Extension_Learning_Grading extends FW_Extension {
 		}
 	}
 
-	private function _quiz_listing() {
-		echo fw_render_view(
-			$this->get_declared_path() . '/views/quiz-listing.php',
-			array(
-				'number' => 20,
-			)
-		);
-	}
-
-	private function _quiz_users( $id ) {
-
-		if ( ! $this->student->is_author( $id ) ) {
-			$id = 0;
-		}
-
-		echo fw_render_view(
-			$this->get_declared_path() . '/views/users-listing.php',
-			array(
-				'id'     => $id,
-				'number' => 20,
-			)
-		);
-	}
-
-	private function _quiz_review( $quiz_id, $user_id ) {
-		$user = new FW_Learning_Student( $user_id );
-
-		if (
-			! $user->id()
-			|| ! $this->quiz->has_quiz( $quiz_id )
-			|| ( $user->is_studying( $quiz_id ) && $user->has_passed( $quiz_id ) )
-		) {
-
-		}
-
-		fw_print( 'quiz review' );
-	}
-
 	public function _display_admin_page() {
+		if ( ! $this->is_learning_grading_page() ) {
+			return;
+		}
+
 		$quiz_id = ( int ) FW_Request::GET( 'quiz-id' );
 		$user_id = ( int ) FW_Request::GET( 'user-id' );
-		$page    = FW_Request::GET( 'sub-page' );
 
-		if ( ! empty( $page ) ) {
-			switch ( $page ) {
-				case 'users' :
-					$this->_quiz_users( $quiz_id );
-					break;
-				case 'review' :
-					$this->_quiz_review( $quiz_id, $user_id );
-					break;
-				default :
-					$this->_quiz_listing();
-					exit;
-			}
-		} else {
+		if ( $this->is_quiz_review_page() ) {
+			$this->_quiz_review( $quiz_id, $user_id );
+		} elseif ( $this->is_users_listing_page() ) {
+			$this->_quiz_users( $quiz_id );
+		} elseif ( $this->is_quiz_listing_page() ) {
 			$this->_quiz_listing();
 		}
-	}
-
-	/**
-	 * @internal
-	 *
-	 * @param array $options
-	 *
-	 * @return array
-	 */
-	public function _action_filter_set_quiz_options( $options ) {
-		$grading_options = array(
-			$this->get_name() . '-process-manually' => array(
-				'type'         => 'switch',
-				'value'        => false,
-				'label'        => __( 'Process quiz manually', 'fw' ),
-				'desc'         => __( 'The quiz requires to be reviewed by lesson author before grading the student',
-					'fw' ),
-				'left-choice'  => array(
-					'value' => false,
-					'label' => __( 'No', 'fw' ),
-				),
-				'right-choice' => array(
-					'value' => true,
-					'label' => __( 'Yes', 'fw' ),
-				),
-			)
-		);
-
-		return array_merge( $options, $grading_options );
 	}
 
 	/**
@@ -194,13 +120,82 @@ class FW_Extension_Learning_Grading extends FW_Extension {
 			8
 		);
 
-		$this->admin_page_url = menu_page_url( 'learning-grading', false );
+		add_action( 'load-' . $screen_hook, array( $this, '_action_admin_add_screen_options' ) );
+	}
 
-		if ( strpos( $screen_hook, $this->get_name() . '-quiz-listing' ) ) {
-			add_action( 'load-' . $screen_hook, array( $this, '_action_admin_add_quiz_listing_screen_options' ) );
-		} elseif ( strpos( $screen_hook, $this->get_name() . '-quiz-users' ) ) {
-			add_action( 'load-' . $screen_hook, array( $this, '_action_admin_add_users_listing_screen_options' ) );
+	/**
+	 * @internal
+	 */
+	public function _action_admin_add_screen_options() {
+
+		if ( ! $this->is_users_listing_page() && ! $this->is_quiz_listing_page() ) {
+			return;
 		}
+
+		$option = 'per_page';
+
+		if ( $this->is_users_listing_page() ) {
+			$args = array(
+				'label'   => __( 'Users', 'fw' ),
+				'default' => 20,
+				'option'  => 'learning_grading_users_per_page'
+			);
+		} else {
+			$args = array(
+				'label'   => __( 'Quiz tests', 'fw' ),
+				'default' => 20,
+				'option'  => 'learning_grading_quiz_per_page'
+			);
+		}
+
+		add_screen_option( $option, $args );
+	}
+
+	/**
+	 * @internal
+	 *
+	 * @param array $options
+	 *
+	 * @return array
+	 */
+	public function _filter_admin_set_quiz_options( $options ) {
+		$grading_options = array(
+			$this->get_name() . '-process-manually' => array(
+				'type'         => 'switch',
+				'value'        => false,
+				'label'        => __( 'Process quiz manually', 'fw' ),
+				'desc'         => __( 'The quiz requires to be reviewed by lesson author before grading the student',
+					'fw' ),
+				'left-choice'  => array(
+					'value' => false,
+					'label' => __( 'No', 'fw' ),
+				),
+				'right-choice' => array(
+					'value' => true,
+					'label' => __( 'Yes', 'fw' ),
+				),
+			)
+		);
+
+		return array_merge( $options, $grading_options );
+	}
+
+	/**
+	 * @internal
+	 *
+	 * @param $status
+	 * @param $option
+	 * @param $value
+	 */
+	public function _filter_admin_save_screen_option( $status, $option, $value ) {
+
+		if ( $option == 'learning_grading_users_per_page'
+		     || $option == 'learning_grading_quiz_per_page'
+		) {
+			return $value;
+		}
+
+		return $status;
 	}
 
 	/**
@@ -224,15 +219,13 @@ class FW_Extension_Learning_Grading extends FW_Extension {
 			}
 		}
 
-		$return['time'] = date( 'Y-m-d H:i:s' );
-
-		$lesson = get_post( $id )->post_parent;
+		$return['time'] = time();
 
 		$data = array(
-			'quiz' => $return
+			'quiz' => new FW_Learning_Grading_Quiz_Review( $return )
 		);
 
-		$this->student->add_lesson_data( $lesson, $data );
+		$this->student->add_lesson_data( $id, $data );
 		fw_update_user_meta( $this->student->id(), 'learning-grading-quiz-status-' . $id, $return['status'] );
 	}
 
@@ -249,6 +242,64 @@ class FW_Extension_Learning_Grading extends FW_Extension {
 		}
 
 		if ( fw_get_db_post_option( $id, $this->get_name() . '-process-manually' ) == true ) {
+			return true;
+		}
+
+		return false;
+	}
+
+	public function get_link() {
+		return menu_page_url( $this->get_name() );
+	}
+
+	public function is_learning_grading_page() {
+		if ( fw_current_screen_match( array(
+			'only' => array(
+				'id'   => 'toplevel_page_' . $this->get_name(),
+				'base' => 'toplevel_page_' . $this->get_name(),
+			)
+		) ) ) {
+			return true;
+		}
+
+		return false;
+	}
+
+	public function is_quiz_listing_page() {
+		if ( ! $this->is_learning_grading_page()
+		     || $this->is_quiz_review_page()
+		     || $this->is_users_listing_page()
+		) {
+			return false;
+		}
+
+		return true;
+	}
+
+	public function is_users_listing_page() {
+
+		if ( ! $this->is_learning_grading_page() ) {
+			return false;
+		}
+
+		$page = FW_Request::GET( 'sub-page' );
+
+		if ( $page == 'users' ) {
+			return true;
+		}
+
+		return false;
+	}
+
+	public function is_quiz_review_page() {
+
+		if ( ! $this->is_learning_grading_page() ) {
+			return false;
+		}
+
+		$page = FW_Request::GET( 'sub-page' );
+
+		if ( $page == 'review' ) {
 			return true;
 		}
 
@@ -283,10 +334,79 @@ class FW_Extension_Learning_Grading extends FW_Extension {
 	}
 
 	private function admin_filters() {
-		add_filter( 'fw_ext_learning_quiz_settings', array( $this, '_action_filter_set_quiz_options' ) );
+		add_filter( 'fw_ext_learning_quiz_settings', array( $this, '_filter_admin_set_quiz_options' ) );
+		add_filter( 'set-screen-option', array( $this, '_filter_admin_save_screen_option' ), 10, 3 );
 	}
 
 	private function theme_actions() {
 		add_action( 'fw_ext_learning_quiz_form_process', array( $this, '_action_theme_process_quiz' ), 2, 10 );
+	}
+
+	/**
+	 * If output already started, we cannot set the redirect header, do redirect from js
+	 */
+	private function js_redirect() {
+		echo
+			'<script type="text/javascript">' .
+			'window.location.replace("' . esc_js( $this->get_link() ) . '");' .
+			'</script>';
+	}
+
+	private function _quiz_listing() {
+		$user     = get_current_user_id();
+		$screen   = get_current_screen();
+		$option   = $screen->get_option( 'per_page', 'option' );
+		$per_page = ( int ) get_user_meta( $user, $option, true );
+
+		echo fw_render_view(
+			$this->get_declared_path() . '/views/quiz-listing.php',
+			array(
+				'number' => ( $per_page > 0 ) ? $per_page : 20,
+			)
+		);
+	}
+
+	private function _quiz_users( $id ) {
+
+		$user     = get_current_user_id();
+		$screen   = get_current_screen();
+		$option   = $screen->get_option( 'per_page', 'option' );
+		$per_page = ( int ) get_user_meta( $user, $option, true );
+
+		if ( ! $this->student->is_author( $id ) ) {
+			$id = 0;
+		}
+
+		echo fw_render_view(
+			$this->get_declared_path() . '/views/users-listing.php',
+			array(
+				'id'     => $id,
+				'number' => ( $per_page > 0 ) ? $per_page : 20,
+			)
+		);
+	}
+
+	private function _quiz_review( $quiz_id, $user_id ) {
+		$user = new FW_Learning_Student( $user_id );
+
+		if (
+			! $user->id()
+			|| ! $this->quiz->has_quiz( $quiz_id )
+			|| $user->get_quiz_status( $quiz_id ) != 'pending'
+			|| ( ! $user->is_studying( $quiz_id ) && ! $user->has_passed( $quiz_id ) )
+		) {
+			FW_Flash_Messages::add( $this->get_name(), __( 'Unable to review the quiz', 'fw' ), 'error' );
+			$this->js_redirect();
+
+			return;
+		}
+
+		echo fw_render_view(
+			$this->get_declared_path() . '/views/quiz-review.php',
+			array(
+				'quiz' => $quiz_id,
+				'user' => $user_id
+			)
+		);
 	}
 }

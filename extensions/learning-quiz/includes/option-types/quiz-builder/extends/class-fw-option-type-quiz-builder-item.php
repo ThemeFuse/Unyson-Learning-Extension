@@ -37,6 +37,18 @@ abstract class FW_Option_Type_Quiz_Builder_Item extends FW_Option_Type_Builder_I
 	abstract public function process_item( array $item, $input_value );
 
 	/**
+	 * This function renders the question in backend on instructor page
+	 * You can overwrite the function on your item in case the question needs a special html to be rendered
+	 *
+	 * @param FW_Quiz_Question_Process_Response $item
+	 *
+	 * @return null|string
+	 */
+	public static function review( FW_Quiz_Question_Process_Response $item ) {
+		return null;
+	}
+
+	/**
 	 * Return item options that was set before using set_options() method,
 	 * The options will be merged with default items options: Question and Percentage mark
 	 *
