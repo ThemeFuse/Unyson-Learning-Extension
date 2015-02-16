@@ -608,7 +608,7 @@ class FW_Extension_Learning extends FW_Extension {
 	 * {@inheritdoc}
 	 */
 	public function _get_link() {
-		return 'edit.php?post_type=' . $this->lessons;
+		return self_admin_url('edit.php?post_type=' . $this->lessons);
 	}
 
 	/**
