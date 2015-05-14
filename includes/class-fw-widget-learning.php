@@ -95,7 +95,7 @@ class FW_Widget_Learning extends WP_Widget {
 			'courses'       => $courses,
 		);
 
-		echo fw_render_view( $this->learning->locate_view_path( 'learning-widget-view' ), $data );
+		echo fw_render_view( $this->learning->locate_view_path( 'widget' ), $data );
 	}
 
 	function update( $new_instance, $old_instance ) {
