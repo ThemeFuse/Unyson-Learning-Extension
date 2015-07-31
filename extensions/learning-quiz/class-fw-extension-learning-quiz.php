@@ -275,7 +275,7 @@ class FW_Extension_Learning_Quiz extends FW_Extension {
 					$this->get_name() . '-passmark' => array(
 						'label' => __( 'Quiz Passmark Points', 'fw' ),
 						'type'  => 'text',
-						'desc'  => __( 'The percentage at which the test will be passed.', 'fw' ),
+						'desc'  => __( 'The points number at which the test will be passed.', 'fw' ),
 					),
 				)
 			)
