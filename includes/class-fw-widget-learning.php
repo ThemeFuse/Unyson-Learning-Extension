@@ -17,7 +17,7 @@ class FW_Widget_Learning extends WP_Widget {
 
 		$widget_ops = array( 'description' => __( 'Get list of courses', 'fw' ) );
 
-		parent::WP_Widget( false, __( 'Lesson Courses', 'fw' ), $widget_ops );
+		parent::__construct( false, __( 'Lesson Courses', 'fw' ), $widget_ops );
 	}
 
 	function widget( $args, $instance ) {
