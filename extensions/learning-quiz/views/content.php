@@ -18,7 +18,7 @@ $pass_mark = (int) fw_get_db_post_option( $lesson->ID, 'learning-quiz-passmark' 
 $text      = '';
 
 if ( $pass_mark > 0 ) {
-	$text = sprintf( __( 'You require %d%% in oder to pass the test', 'fw' ), $pass_mark );
+	$text = sprintf( __( 'You require %d points in oder to pass the test', 'fw' ), $pass_mark );
 }
 
 if ( ! empty( $response ) ) {
