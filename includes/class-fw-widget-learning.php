@@ -117,17 +117,17 @@ class FW_Widget_Learning extends WP_Widget {
 
 		?>
 		<p>
-			<label for="<?php echo $this->get_field_id( 'title' ); ?>"><?php _e( 'Title', 'fw' ); ?> </label>
-			<input type="text" name="<?php echo $this->get_field_name( 'title' ); ?>"
+			<label for="<?php echo esc_attr($this->get_field_id( 'title' )); ?>"><?php _e( 'Title', 'fw' ); ?> </label>
+			<input type="text" name="<?php echo esc_attr($this->get_field_name( 'title' )); ?>"
 			       value="<?php echo esc_attr( $title ); ?>" class="widefat"
 			       id="<?php $this->get_field_id( 'title' ); ?>"/>
 		</p>
 		<p>
-			<label for="<?php echo $this->get_field_id( 'number' ); ?>"><?php _e( 'Number of courses', 'fw' ); ?>
+			<label for="<?php echo esc_attr($this->get_field_id( 'number' )); ?>"><?php _e( 'Number of courses', 'fw' ); ?>
 				:</label>
-			<input type="text" name="<?php echo $this->get_field_name( 'number' ); ?>"
+			<input type="text" name="<?php echo esc_attr($this->get_field_name( 'number' )); ?>"
 			       value="<?php echo esc_attr( $number ); ?>" class="widefat"
-			       id="<?php echo $this->get_field_id( 'number' ); ?>"/>
+			       id="<?php echo esc_attr($this->get_field_id( 'number' )); ?>"/>
 		</p>
 	<?php
 	}
