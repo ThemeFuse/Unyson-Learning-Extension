@@ -748,7 +748,7 @@ class FW_Extension_Learning extends FW_Extension {
 		global $wpdb;
 
 		$result = $wpdb->get_results( $wpdb->prepare(
-			"SELECT * FROM wp_posts AS p " .
+			"SELECT * FROM {$wpdb->posts} AS p " .
 			"WHERE p.post_date < %s AND p.post_type = %s AND p.post_parent = %d AND p.post_status = 'publish' " .
 			"ORDER BY p.post_date DESC LIMIT 1",
 			$post->post_date,
@@ -790,7 +790,7 @@ class FW_Extension_Learning extends FW_Extension {
 		global $wpdb;
 
 		$result = $wpdb->get_results( $wpdb->prepare(
-			"SELECT * FROM wp_posts AS p " .
+			"SELECT * FROM {$wpdb->posts} AS p " .
 			"WHERE p.post_date > %s AND p.post_type = %s AND p.post_parent = %d AND p.post_status = 'publish' " .
 			"ORDER BY p.post_date ASC LIMIT 1",
 			$post->post_date,
