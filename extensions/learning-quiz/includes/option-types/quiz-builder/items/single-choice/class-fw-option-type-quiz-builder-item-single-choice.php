@@ -9,6 +9,8 @@ class FW_Option_Type_Quiz_Builder_Item_Single_Choice extends FW_Option_Type_Quiz
 	private $parent = null;
 
 	public function _init() {
+		$this->parent = fw()->extensions->get( 'learning-quiz' );
+
 		$this->set_options( array(
 			'correct-answer-group' => array(
 				'type'    => 'group',
@@ -58,7 +60,6 @@ class FW_Option_Type_Quiz_Builder_Item_Single_Choice extends FW_Option_Type_Quiz
 	}
 
 	public function enqueue_static() {
-		$this->parent = fw()->extensions->get( 'learning-quiz' );
 
 		wp_enqueue_style(
 			'fw-builder-' . $this->get_builder_type() . '-item-' . $this->get_type(),

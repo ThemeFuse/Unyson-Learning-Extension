@@ -9,6 +9,8 @@ class FW_Option_Type_Quiz_Builder_Item_Gap_Fill extends FW_Option_Type_Quiz_Buil
 	private $parent = null;
 
 	public function _init() {
+		$this->parent = fw()->extensions->get( 'learning-quiz' );
+
 		$this->set_options( array(
 			'text-before'    => array(
 				'type'  => 'text',
@@ -60,7 +62,6 @@ class FW_Option_Type_Quiz_Builder_Item_Gap_Fill extends FW_Option_Type_Quiz_Buil
 	}
 
 	public function enqueue_static() {
-		$this->parent = fw()->extensions->get( 'learning-quiz' );
 
 		wp_enqueue_style(
 			'fw-builder-' . $this->get_builder_type() . '-item-' . $this->get_type(),
