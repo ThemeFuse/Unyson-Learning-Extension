@@ -116,3 +116,8 @@ function _filter_ext_learning_quiz_add_start_button( $template ) {
 }
 
 add_action( 'template_include', '_filter_ext_learning_quiz_add_start_button', 10, 2 );
+
+function _action_fw_ext_learning_quiz_option_types_init() {
+	require dirname( __FILE__ ) . '/includes/option-types/quiz-builder/class-fw-option-type-quiz-builder.php';
+}
+add_action('fw_option_types_init', '_action_fw_ext_learning_quiz_option_types_init');
