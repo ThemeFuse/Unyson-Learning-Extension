@@ -10,7 +10,7 @@ $manifest['description'] = __(
 	.' Using this extension you can add courses, lessons and tests for your users to take.',
 	'fw'
 );
-$manifest['version']     = '1.0.10';
+$manifest['version']     = '1.0.11';
 $manifest['display']     = true;
 $manifest['standalone']  = true;
 
