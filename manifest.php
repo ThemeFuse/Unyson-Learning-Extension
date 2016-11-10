@@ -15,3 +15,8 @@ $manifest['display']     = true;
 $manifest['standalone']  = true;
 
 $manifest['github_update'] = 'ThemeFuse/Unyson-Learning-Extension';
+
+$manifest['github_repo'] = 'https://github.com/ThemeFuse/Unyson-Learning-Extension';
+$manifest['uri'] = 'http://manual.unyson.io/en/latest/extension/learning/index.html#content';
+$manifest['author'] = 'ThemeFuse';
+$manifest['author_uri'] = 'http://themefuse.com/';
